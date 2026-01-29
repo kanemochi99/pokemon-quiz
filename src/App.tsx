@@ -10,6 +10,8 @@ interface Pokemon {
   id: number;
   name: string;
   image: string;
+  shinyImage?: string;
+  isShiny?: boolean;
   cry?: string;
   flavorText?: string;
   types?: string[];
@@ -32,10 +34,11 @@ const THEMES: { id: ThemeType; color: string; label: string }[] = [
 ];
 
 const MAX_POKEMON_ID = 1010;
+const SHINY_RATE = 0.05; // 5% chance for shiny (1/20)
 
 const getRandomId = () => Math.floor(Math.random() * MAX_POKEMON_ID) + 1;
 
-const fetchPokemonData = async (id: number): Promise<Pokemon> => {
+const fetchPokemonData = async (id: number, forceShiny: boolean = false): Promise<Pokemon> => {
   const [resPokemon, resSpecies] = await Promise.all([
     fetch(`https://pokeapi.co/api/v2/pokemon/${id}`),
     fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`)
@@ -53,10 +56,14 @@ const fetchPokemonData = async (id: number): Promise<Pokemon> => {
   
   const jaTypes = data.types.map((t: any) => TYPE_NAME_MAP[t.type.name] || t.type.name);
   
+  const isShiny = forceShiny || Math.random() < SHINY_RATE;
+  
   return {
     id,
     name: jaName,
     image: data.sprites.other['official-artwork'].front_default,
+    shinyImage: data.sprites.other['official-artwork'].front_shiny,
+    isShiny,
     cry: data.cries?.latest || data.cries?.legacy,
     flavorText: jaFlavorText.replace(/\f/g, '').replace(/\n/g, ' '),
     types: jaTypes,
@@ -384,10 +391,13 @@ function App() {
         </div>
         <div style={{ textAlign: 'center', marginBottom: '1.5rem', marginTop: '2rem' }}>
           <div style={{ position: 'relative', display: 'inline-block' }}>
+            {currentPokemon.isShiny && showResult && (
+              <div className="shiny-sparkle" style={{ position: 'absolute', top: '-10px', right: '-10px', fontSize: '2rem', animation: 'spin 2s linear infinite', zIndex: 5 }}>✨</div>
+            )}
             <img 
-              src={currentPokemon.image} 
+              src={currentPokemon.isShiny && showResult ? currentPokemon.shinyImage : currentPokemon.image} 
               alt="Pokemon" 
-              className={displayMode === 'silhouette' && !showResult ? 'pokemon-silhouette' : 'pokemon-reveal'}
+              className={`${displayMode === 'silhouette' && !showResult ? 'pokemon-silhouette' : 'pokemon-reveal'} ${currentPokemon.isShiny && showResult ? 'shiny-glow' : ''}`}
               style={{ width: '250px', height: '250px', objectFit: 'contain' }} 
             />
             {currentPokemon.cry && !showResult && (
@@ -460,6 +470,11 @@ function App() {
               <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>
                 {isCorrect ? '🎉' : '😢'}
               </div>
+              {currentPokemon.isShiny && isCorrect && (
+                <div style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: '#fbbf24', fontWeight: 700, animation: 'pulse 1s infinite' }}>
+                  ✨ いろちがい！ ✨
+                </div>
+              )}
               <h2 style={{ fontSize: '1.5rem', color: isCorrect ? 'var(--success)' : 'var(--error)', marginBottom: '0.25rem', fontWeight: 700 }}>
                 {isCorrect ? 'せいかい！' : 'ざんねん...'}
               </h2>
