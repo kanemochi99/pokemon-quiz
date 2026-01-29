@@ -23,12 +23,12 @@ const TYPE_NAME_MAP: Record<string, string> = {
 };
 
 const THEMES: { id: ThemeType; color: string; label: string }[] = [
-  { id: 'light', color: '#ffffff', label: '標準' },
-  { id: 'dark', color: '#111827', label: 'ダーク' },
-  { id: 'blue', color: '#3b82f6', label: 'ブルー' },
-  { id: 'red', color: '#ef4444', label: 'レッド' },
+  { id: 'light', color: '#ffffff', label: 'しろ' },
+  { id: 'dark', color: '#111827', label: 'くろ' },
+  { id: 'blue', color: '#3b82f6', label: 'あお' },
+  { id: 'red', color: '#ef4444', label: 'あか' },
   { id: 'pink', color: '#ec4899', label: 'ピンク' },
-  { id: 'green', color: '#10b981', label: 'グリーン' },
+  { id: 'green', color: '#10b981', label: 'みどり' },
 ];
 
 const MAX_POKEMON_ID = 1010;
@@ -243,8 +243,8 @@ function App() {
       <div className="app-container">
         <div className="glass-panel fade-in" style={{ padding: '2rem', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <h2 style={{ fontSize: '1.5rem' }}>📖 集めたポケモン ({caughtPokemon.length})</h2>
-            <button onClick={() => setShowCollection(false)} style={{ background: 'var(--bg-gray)', color: 'var(--text-secondary)' }}>閉じる</button>
+            <h2 style={{ fontSize: '1.5rem' }}>📖 つかまえたポケモン ({caughtPokemon.length})</h2>
+            <button onClick={() => setShowCollection(false)} style={{ background: 'var(--bg-gray)', color: 'var(--text-secondary)' }}>とじる</button>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '1rem' }}>
             {caughtPokemon.sort((a,b) => a-b).map(id => (
@@ -258,7 +258,7 @@ function App() {
               </div>
             ))}
           </div>
-          {caughtPokemon.length === 0 && <p style={{ textAlign: 'center', marginTop: '2rem', color: 'var(--text-secondary)' }}>まだ一匹も捕まえていないようです...</p>}
+          {caughtPokemon.length === 0 && <p style={{ textAlign: 'center', marginTop: '2rem', color: 'var(--text-secondary)' }}>まだ1ぴきもつかまえていないよ...</p>}
         </div>
       </div>
     );
@@ -283,18 +283,18 @@ function App() {
           </h1>
           <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <div className="score-badge">
-              🏆 ベスト: {bestScore}
+              🏆 さいこう: {bestScore}
             </div>
             <div className="score-badge">
-              🔥 最大連勝: {maxStreak}
+              🔥 れんしょう: {maxStreak}
             </div>
             <button onClick={() => setShowCollection(true)} style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', background: 'var(--bg-gray)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 600 }}>
-              📖 図鑑: {caughtPokemon.length}
+              📖 ずかん: {caughtPokemon.length}
             </button>
           </div>
           
           <div style={{ marginBottom: '1.5rem' }}>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 600 }}>テーマを選択</p>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 600 }}>いろをえらぶ</p>
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
               {THEMES.map((t) => (
                 <div 
@@ -310,7 +310,7 @@ function App() {
 
           <div style={{ marginBottom: '2rem', display: 'flex', gap: '2rem', justifyContent: 'center' }}>
             <div>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 600 }}>表示モード</p>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 600 }}>みためをえらぶ</p>
               <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center', background: 'var(--bg-gray)', padding: '0.25rem', borderRadius: '8px' }}>
                 <button 
                   onClick={() => setDisplayMode('silhouette')} 
@@ -323,7 +323,7 @@ function App() {
                     borderRadius: '6px'
                   }}
                 >
-                  影
+                  かげ
                 </button>
                 <button 
                   onClick={() => setDisplayMode('illustration')} 
@@ -336,7 +336,7 @@ function App() {
                     borderRadius: '6px'
                   }}
                 >
-                  絵
+                  え
                 </button>
               </div>
             </div>
@@ -344,10 +344,10 @@ function App() {
           
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button onClick={() => startGame('choice')} style={{ padding: '1rem 2rem', fontSize: '1.125rem', background: 'var(--success)', color: 'white', flex: 1, minWidth: '140px' }}>
-              🎯 選択肢
+              🎯 えらぶ
             </button>
             <button onClick={() => startGame('input')} style={{ padding: '1rem 2rem', fontSize: '1.125rem', background: 'var(--primary-color)', color: 'white', flex: 1, minWidth: '140px' }}>
-              ⌨️ 入力
+              ⌨️ かく
             </button>
           </div>
         </div>
@@ -360,7 +360,7 @@ function App() {
     return (
       <div className="app-container">
         <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center' }}>
-          <p>読み込み中...</p>
+          <p>よみこみちゅう...</p>
         </div>
       </div>
     );
@@ -373,13 +373,13 @@ function App() {
     <div className="app-container">
       <div className="glass-panel bounce-in" style={{ padding: '2rem', width: '100%', maxWidth: '600px', position: 'relative' }}>
         <button onClick={resetGame} style={{ position: 'absolute', top: '1rem', left: '1rem', padding: '0.5rem 0.875rem', fontSize: '0.875rem', background: 'var(--bg-gray)', color: 'var(--text-secondary)' }}>
-          ← 戻る
+          ← もどる
         </button>
         <div style={{ position: 'absolute', top: '1rem', right: '1rem', textAlign: 'right' }}>
-          <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>スコア: <strong style={{ color: 'var(--text-primary)' }}>{score}</strong></div>
+          <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>てんすう: <strong style={{ color: 'var(--text-primary)' }}>{score}</strong></div>
           <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#f59e0b' }}>
             {currentStreak > 0 && '🔥'}
-            連勝: {currentStreak}
+            れんしょう: {currentStreak}
           </div>
         </div>
         <div style={{ textAlign: 'center', marginBottom: '1.5rem', marginTop: '2rem' }}>
@@ -394,7 +394,7 @@ function App() {
               <button 
                 onClick={playCry} 
                 style={{ position: 'absolute', bottom: '0', right: '0', background: 'var(--bg-panel)', padding: '0.5rem', borderRadius: '50%', border: '1px solid var(--border-color)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
-                title="鳴き声を聞く"
+                title="なきごえをきく"
               >
                 🔊
               </button>
@@ -406,7 +406,7 @@ function App() {
           
           {hintLevel > 0 && (
             <div className="fade-in" style={{ marginTop: '0.5rem', fontSize: '0.875rem', padding: '0.5rem', background: 'var(--bg-gray)', borderRadius: '8px' }}>
-              💡 <strong>ヒント:</strong> {hintLevel === 1 ? `タイプ: ${currentPokemon.types?.join(' / ')}` : `最初の文字: ${currentPokemon.name[0]}`}
+              💡 <strong>ヒント:</strong> {hintLevel === 1 ? `タイプ: ${currentPokemon.types?.join(' / ')}` : `さいしょのもじ: ${currentPokemon.name[0]}`}
             </div>
           )}
         </div>
@@ -417,7 +417,7 @@ function App() {
               onClick={() => setHintLevel(prev => prev + 1)} 
               style={{ padding: '0.4rem 1rem', fontSize: '0.75rem', background: 'var(--bg-gray)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}
             >
-              💡 ヒントを出す
+              💡 ヒントをみる
             </button>
           )}
         </div>
@@ -447,9 +447,9 @@ function App() {
 
         {gameMode === 'input' && (
           <form onSubmit={handleInputSubmit} style={{ width: '100%', marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
-            <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} disabled={showResult} placeholder="名前を入力..." autoFocus />
+            <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} disabled={showResult} placeholder="なまえをかいてね..." autoFocus />
             <button type="submit" disabled={showResult || !inputValue.trim()} style={{ background: 'var(--primary-color)', color: 'white', minWidth: '80px' }}>
-              回答
+              こたえる
             </button>
           </form>
         )}
@@ -461,7 +461,7 @@ function App() {
                 {isCorrect ? '🎉' : '😢'}
               </div>
               <h2 style={{ fontSize: '1.5rem', color: isCorrect ? 'var(--success)' : 'var(--error)', marginBottom: '0.25rem', fontWeight: 700 }}>
-                {isCorrect ? '正解！' : '残念...'}
+                {isCorrect ? 'せいかい！' : 'ざんねん...'}
               </h2>
               <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
                 {currentPokemon.genus}
@@ -470,7 +470,7 @@ function App() {
               
               <div style={{ background: 'var(--bg-gray)', padding: '1rem', borderRadius: '12px', textAlign: 'left', marginBottom: '1.5rem' }}>
                 <p style={{ fontSize: '0.875rem', lineHeight: '1.6', color: 'var(--text-primary)' }}>
-                  {currentPokemon.flavorText || 'データが見つかりませんでした。'}
+                  {currentPokemon.flavorText || 'せつめいがみつかりませんでした。'}
                 </p>
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
                   {currentPokemon.types?.map(type => (
@@ -485,7 +485,7 @@ function App() {
               </div>
               
               <button onClick={nextQuestion} style={{ background: 'var(--primary-color)', color: 'white', padding: '0.875rem 2.5rem', fontSize: '1.125rem', fontWeight: 600, width: '100%' }}>
-                次へ →
+                つぎへ →
               </button>
             </div>
           </div>
