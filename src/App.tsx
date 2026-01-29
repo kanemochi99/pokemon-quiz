@@ -2,8 +2,8 @@ import React, { useState, useCallback } from 'react';
 import './App.css';
 import confetti from 'canvas-confetti';
 
-type GameMode = 'choice' | 'input' | 'cry' | null;
-type DisplayMode = 'silhouette' | 'illustration';
+type GameMode = 'choice' | 'input' | null;
+type DisplayMode = 'illustration' | 'silhouette' | 'cry';
 type ThemeType = 'light' | 'dark' | 'blue' | 'red' | 'pink' | 'green';
 
 interface Pokemon {
@@ -248,14 +248,14 @@ function App() {
     setChoices(nextChoices);
 
     // Auto-play cry in cry mode
-    if (gameMode === 'cry' && nextPokemon?.cry) {
+    if (displayMode === 'cry' && nextPokemon?.cry) {
       setTimeout(() => {
         const audio = new Audio(nextPokemon.cry);
         audio.volume = 0.5;
         audio.play().catch(e => console.error('Auto-play failed', e));
       }, 500);
     }
-  }, [quizBuffer, selectedGen, selectedType, prefetchNextQuestion, gameMode]);
+  }, [quizBuffer, selectedGen, selectedType, prefetchNextQuestion, displayMode]);
 
   const startGame = useCallback((mode: GameMode) => {
     setGameMode(mode);
@@ -492,8 +492,21 @@ function App() {
 
           <div style={{ marginBottom: '2rem', display: 'flex', gap: '2rem', justifyContent: 'center' }}>
             <div>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 600 }}>みためをえらぶ</p>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 600 }}>もんだいの だしかた</p>
               <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center', background: 'var(--bg-gray)', padding: '0.25rem', borderRadius: '8px' }}>
+                <button 
+                  onClick={() => setDisplayMode('illustration')} 
+                  style={{ 
+                    padding: '0.5rem 1rem', 
+                    fontSize: '0.875rem', 
+                    background: displayMode === 'illustration' ? 'var(--primary-color)' : 'transparent',
+                    color: displayMode === 'illustration' ? 'white' : 'var(--text-secondary)',
+                    boxShadow: 'none',
+                    borderRadius: '6px'
+                  }}
+                >
+                  え
+                </button>
                 <button 
                   onClick={() => setDisplayMode('silhouette')} 
                   style={{ 
@@ -508,43 +521,36 @@ function App() {
                   かげ
                 </button>
                 <button 
-                  onClick={() => setDisplayMode('illustration')} 
+                  onClick={() => setDisplayMode('cry')} 
                   style={{ 
                     padding: '0.5rem 1rem', 
                     fontSize: '0.875rem', 
-                    background: displayMode === 'illustration' ? 'var(--primary-color)' : 'transparent',
-                    color: displayMode === 'illustration' ? 'white' : 'var(--text-secondary)',
+                    background: displayMode === 'cry' ? 'var(--primary-color)' : 'transparent',
+                    color: displayMode === 'cry' ? 'white' : 'var(--text-secondary)',
                     boxShadow: 'none',
                     borderRadius: '6px'
                   }}
                 >
-                  え
+                  こえ
                 </button>
               </div>
             </div>
           </div>
           
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', width: '100%', maxWidth: '280px', margin: '0 auto 1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', width: '100%', maxWidth: '320px', margin: '0 auto 1.5rem' }}>
             <button 
               className="bounce-in"
               onClick={() => startGame('choice')}
-              style={{ padding: '1.25rem', fontSize: '1.25rem', background: 'linear-gradient(135deg, #6e8efb, #a777e3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}
+              style={{ padding: '1.25rem', fontSize: '1.25rem', background: 'linear-gradient(135deg, #6e8efb, #a777e3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', flex: 1 }}
             >
               <span>🎯</span> えらぶ
             </button>
             <button 
               className="bounce-in"
               onClick={() => startGame('input')}
-              style={{ padding: '1.25rem', fontSize: '1.25rem', background: 'linear-gradient(135deg, #f093fb, #f5576c)', animationDelay: '0.1s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}
+              style={{ padding: '1.25rem', fontSize: '1.25rem', background: 'linear-gradient(135deg, #f093fb, #f5576c)', animationDelay: '0.1s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', flex: 1 }}
             >
               <span>⌨️</span> かく
-            </button>
-            <button 
-              className="bounce-in"
-              onClick={() => startGame('cry')}
-              style={{ padding: '1.25rem', fontSize: '1.25rem', background: 'linear-gradient(135deg, #4facfe, #00f2fe)', animationDelay: '0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}
-            >
-              <span>🔈</span> なきごえ
             </button>
           </div>
         </div>
@@ -585,7 +591,7 @@ function App() {
               <div className="shiny-sparkle" style={{ position: 'absolute', top: '-10px', right: '-10px', fontSize: '2rem', animation: 'spin 2s linear infinite', zIndex: 5 }}>✨</div>
             )}
             
-            {gameMode === 'cry' && !showResult ? (
+            {displayMode === 'cry' && !showResult ? (
               <div 
                 onClick={playCry}
                 className="bounce-in"
@@ -615,7 +621,7 @@ function App() {
               />
             )}
 
-            {currentPokemon.cry && !showResult && gameMode !== 'cry' && (
+            {currentPokemon.cry && !showResult && displayMode !== 'cry' && (
               <button 
                 onClick={playCry} 
                 style={{ position: 'absolute', bottom: '0', right: '0', background: 'var(--bg-panel)', padding: '0.5rem', borderRadius: '50%', border: '1px solid var(--border-color)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
@@ -626,7 +632,7 @@ function App() {
             )}
           </div>
           <h3 style={{ marginTop: '1rem', fontSize: '1.25rem', fontWeight: 600 }}>
-            {gameMode === 'cry' && !showResult ? 'この なきごえは だーれだ？' : (displayMode === 'silhouette' ? 'ポケモン だーれだ？' : 'このポケモンの名前は？')}
+            {displayMode === 'cry' && !showResult ? 'この なきごえは だーれだ？' : (displayMode === 'silhouette' ? 'ポケモン だーれだ？' : 'このポケモンの名前は？')}
           </h3>
           
           {hintLevel > 0 && (
@@ -647,7 +653,7 @@ function App() {
           )}
         </div>
 
-        {(gameMode === 'choice' || gameMode === 'cry') && (
+        {gameMode === 'choice' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', width: '100%', marginTop: '1rem' }}>
             {choices.map((choice, index) => (
               <button 
