@@ -1,6 +1,7 @@
 # Vercelデプロイ手順
 
 ## 前提条件
+
 - GitHubアカウント
 - Vercelアカウント（GitHubでサインアップ可能）
 
@@ -8,7 +9,7 @@
 
 ### 1. GitHubリポジトリを作成
 
-1. https://github.com/new にアクセス
+1. <https://github.com/new> にアクセス
 2. リポジトリ名: `pokemon-quiz`（任意）
 3. Public または Private を選択
 4. **「Add a README file」のチェックは外す**（既にREADMEがあるため）
@@ -28,7 +29,7 @@ git push -u origin main
 
 ### 3. Vercelにデプロイ
 
-1. https://vercel.com にアクセス
+1. <https://vercel.com> にアクセス
 2. 「Sign Up」または「Log In」（GitHubアカウントでログイン推奨）
 3. 「Add New...」→「Project」をクリック
 4. GitHubリポジトリ一覧から `pokemon-quiz` を選択
@@ -45,10 +46,12 @@ git push -u origin main
 ## トラブルシューティング
 
 ### ビルドエラーが発生した場合
-- Vercelのログを確認
+
+- Vercel’s ログを確認
 - ローカルで `npm run build` を実行してエラーがないか確認
 
 ### デプロイ後に更新する場合
+
 1. コードを修正
 2. `git add .`
 3. `git commit -m "Update message"`

@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import './App.css';
 import confetti from 'canvas-confetti';
 
-type GameMode = 'choice' | 'input' | null;
+type GameMode = 'choice' | 'input' | 'cry' | null;
 type DisplayMode = 'silhouette' | 'illustration';
 type ThemeType = 'light' | 'dark' | 'blue' | 'red' | 'pink' | 'green';
 
@@ -209,25 +209,40 @@ function App() {
     setInputValue('');
     setHintLevel(0);
     
+    let nextPokemon, nextChoices;
+
     if (quizBuffer) {
-      setCurrentPokemon(quizBuffer.correctPokemon);
-      setChoices(quizBuffer.choices);
-      // Clear buffer and trigger next fetch immediately
+      nextPokemon = quizBuffer.correctPokemon;
+      nextChoices = quizBuffer.choices;
       setQuizBuffer(null);
       prefetchNextQuestion();
     } else {
       setIsLoading(true);
       try {
         const data = await fetchQuizData(selectedGen, selectedType);
-        setCurrentPokemon(data.correctPokemon);
-        setChoices(data.choices);
+        nextPokemon = data.correctPokemon;
+        nextChoices = data.choices;
         prefetchNextQuestion();
       } catch (error) {
         console.error('Failed to load question', error);
+        setIsLoading(false);
+        return;
       }
       setIsLoading(false);
     }
-  }, [quizBuffer, selectedGen, selectedType, prefetchNextQuestion]);
+
+    setCurrentPokemon(nextPokemon);
+    setChoices(nextChoices);
+
+    // Auto-play cry in cry mode
+    if (gameMode === 'cry' && nextPokemon?.cry) {
+      setTimeout(() => {
+        const audio = new Audio(nextPokemon.cry);
+        audio.volume = 0.5;
+        audio.play().catch(e => console.error('Auto-play failed', e));
+      }, 500);
+    }
+  }, [quizBuffer, selectedGen, selectedType, prefetchNextQuestion, gameMode]);
 
   const startGame = useCallback((mode: GameMode) => {
     setGameMode(mode);
@@ -496,12 +511,27 @@ function App() {
             </div>
           </div>
           
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => startGame('choice')} style={{ padding: '1rem 2rem', fontSize: '1.125rem', background: 'var(--success)', color: 'white', flex: 1, minWidth: '140px' }}>
-              🎯 えらぶ
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem', width: '100%', maxWidth: '280px', margin: '0 auto 1.5rem' }}>
+            <button 
+              className="bounce-in"
+              onClick={() => startGame('choice')}
+              style={{ padding: '1.25rem', fontSize: '1.25rem', background: 'linear-gradient(135deg, #6e8efb, #a777e3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}
+            >
+              <span>🎯</span> えらぶ
             </button>
-            <button onClick={() => startGame('input')} style={{ padding: '1rem 2rem', fontSize: '1.125rem', background: 'var(--primary-color)', color: 'white', flex: 1, minWidth: '140px' }}>
-              ⌨️ かく
+            <button 
+              className="bounce-in"
+              onClick={() => startGame('input')}
+              style={{ padding: '1.25rem', fontSize: '1.25rem', background: 'linear-gradient(135deg, #f093fb, #f5576c)', animationDelay: '0.1s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}
+            >
+              <span>⌨️</span> かく
+            </button>
+            <button 
+              className="bounce-in"
+              onClick={() => startGame('cry')}
+              style={{ padding: '1.25rem', fontSize: '1.25rem', background: 'linear-gradient(135deg, #4facfe, #00f2fe)', animationDelay: '0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}
+            >
+              <span>🔈</span> なきごえ
             </button>
           </div>
         </div>
@@ -541,13 +571,38 @@ function App() {
             {currentPokemon.isShiny && showResult && (
               <div className="shiny-sparkle" style={{ position: 'absolute', top: '-10px', right: '-10px', fontSize: '2rem', animation: 'spin 2s linear infinite', zIndex: 5 }}>✨</div>
             )}
-            <img 
-              src={currentPokemon.isShiny && showResult ? currentPokemon.shinyImage : currentPokemon.image} 
-              alt="Pokemon" 
-              className={`${displayMode === 'silhouette' && !showResult ? 'pokemon-silhouette' : 'pokemon-reveal'} ${currentPokemon.isShiny && showResult ? 'shiny-glow' : ''}`}
-              style={{ width: '250px', height: '250px', objectFit: 'contain' }} 
-            />
-            {currentPokemon.cry && !showResult && (
+            
+            {gameMode === 'cry' && !showResult ? (
+              <div 
+                onClick={playCry}
+                className="bounce-in"
+                style={{ 
+                  width: '250px', 
+                  height: '250px', 
+                  borderRadius: '125px', 
+                  background: 'var(--bg-gray)', 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  border: '4px dashed var(--border-color)',
+                  gap: '0.5rem'
+                }}
+              >
+                <div style={{ fontSize: '5rem' }}>🔈</div>
+                <div style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-secondary)' }}>もういちど きく</div>
+              </div>
+            ) : (
+              <img 
+                src={currentPokemon.isShiny && showResult ? currentPokemon.shinyImage : currentPokemon.image} 
+                alt="Pokemon" 
+                className={`${displayMode === 'silhouette' && !showResult ? 'pokemon-silhouette' : 'pokemon-reveal'} ${currentPokemon.isShiny && showResult ? 'shiny-glow' : ''}`}
+                style={{ width: '250px', height: '250px', objectFit: 'contain' }} 
+              />
+            )}
+
+            {currentPokemon.cry && !showResult && gameMode !== 'cry' && (
               <button 
                 onClick={playCry} 
                 style={{ position: 'absolute', bottom: '0', right: '0', background: 'var(--bg-panel)', padding: '0.5rem', borderRadius: '50%', border: '1px solid var(--border-color)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
@@ -558,7 +613,7 @@ function App() {
             )}
           </div>
           <h3 style={{ marginTop: '1rem', fontSize: '1.25rem', fontWeight: 600 }}>
-            {displayMode === 'silhouette' ? 'ポケモン だーれだ？' : 'このポケモンの名前は？'}
+            {gameMode === 'cry' && !showResult ? 'この なきごえは だーれだ？' : (displayMode === 'silhouette' ? 'ポケモン だーれだ？' : 'このポケモンの名前は？')}
           </h3>
           
           {hintLevel > 0 && (
@@ -579,14 +634,16 @@ function App() {
           )}
         </div>
 
-        {gameMode === 'choice' && (
+        {(gameMode === 'choice' || gameMode === 'cry') && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', width: '100%', marginTop: '1rem' }}>
             {choices.map((choice, index) => (
               <button 
                 key={`${choice}-${index}`} 
                 onClick={() => checkAnswer(choice)} 
                 disabled={showResult} 
+                className="fade-in"
                 style={{ 
+                  animationDelay: `${index * 0.1}s`,
                   padding: '1rem', 
                   fontSize: '1rem', 
                   background: 'var(--bg-gray)', 
