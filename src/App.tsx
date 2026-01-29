@@ -3,6 +3,7 @@ import './App.css';
 import confetti from 'canvas-confetti';
 
 type GameMode = 'choice' | 'input' | null;
+type DisplayMode = 'silhouette' | 'illustration';
 
 interface Pokemon {
   id: number;
@@ -52,7 +53,9 @@ const fetchQuizData = async () => {
 
 function App() {
   const [gameMode, setGameMode] = useState<GameMode>(null);
+  const [displayMode, setDisplayMode] = useState<DisplayMode>('silhouette');
   const [currentPokemon, setCurrentPokemon] = useState<Pokemon | null>(null);
+  const [previewPokemon, setPreviewPokemon] = useState<Pokemon | null>(null);
   const [choices, setChoices] = useState<string[]>([]);
   const [score, setScore] = useState(0);
   const [totalQuestions, setTotalQuestions] = useState(0);
@@ -65,6 +68,19 @@ function App() {
   const [bestScore, setBestScore] = useState(() => Number(localStorage.getItem('bestScore')) || 0);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [maxStreak, setMaxStreak] = useState(() => Number(localStorage.getItem('maxStreak')) || 0);
+
+  // Load preview Pokemon on mount
+  React.useEffect(() => {
+    const loadPreview = async () => {
+      try {
+        const pokemon = await fetchRandomPokemon();
+        setPreviewPokemon(pokemon);
+      } catch (error) {
+        console.error('Failed to load preview Pokemon', error);
+      }
+    };
+    loadPreview();
+  }, []);
 
   const loadQuestion = useCallback(async () => {
     setIsLoading(true);
@@ -151,26 +167,67 @@ function App() {
   if (!gameMode) {
     return (
       <div className="app-container">
-        <div className="glass-panel fade-in" style={{ padding: '3rem', textAlign: 'center' }}>
-          <h1 style={{ fontSize: '3rem', marginBottom: '1rem', background: 'linear-gradient(135deg, #FFD700, #FF6B6B, #4ECDC4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textShadow: '0 4px 8px rgba(0,0,0,0.2)' }}>
+        <div className="glass-panel fade-in" style={{ padding: '2.5rem', textAlign: 'center' }}>
+          {previewPokemon && (
+            <div style={{ marginBottom: '1.5rem' }}>
+              <img 
+                src={previewPokemon.image} 
+                alt="Pokemon Preview" 
+                style={{ width: '150px', height: '150px', objectFit: 'contain', opacity: 0.8 }} 
+              />
+            </div>
+          )}
+          <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: '#1f2937' }}>
             🎮 ポケモンクイズ
           </h1>
-          <div style={{ marginBottom: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div style={{ marginBottom: '2rem', display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <div className="score-badge">
               🏆 ベスト: {bestScore}
             </div>
             <div className="score-badge">
-              <span className="streak-fire">🔥</span> 最大連勝: {maxStreak}
+              🔥 最大連勝: {maxStreak}
             </div>
           </div>
-          <p style={{ marginBottom: '2.5rem', fontSize: '1.2rem', opacity: 0.9, fontWeight: 500 }}>
+          <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: '#6b7280' }}>
             モードを選んでスタート！
           </p>
-          <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => startGame('choice')} style={{ padding: '1.2rem 2.5rem', fontSize: '1.2rem', background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', fontWeight: 700 }}>
+          
+          <div style={{ marginBottom: '1.5rem' }}>
+            <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem', fontWeight: 500 }}>表示モード</p>
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+              <button 
+                onClick={() => setDisplayMode('silhouette')} 
+                style={{ 
+                  padding: '0.5rem 1rem', 
+                  fontSize: '0.875rem', 
+                  background: displayMode === 'silhouette' ? '#1f2937' : '#f3f4f6',
+                  color: displayMode === 'silhouette' ? 'white' : '#6b7280',
+                  border: displayMode === 'silhouette' ? 'none' : '1px solid #e5e7eb'
+                }}
+              >
+                🕵️ シルエット
+              </button>
+              <button 
+                onClick={() => setDisplayMode('illustration')} 
+                style={{ 
+                  padding: '0.5rem 1rem', 
+                  fontSize: '0.875rem', 
+                  background: displayMode === 'illustration' ? '#1f2937' : '#f3f4f6',
+                  color: displayMode === 'illustration' ? 'white' : '#6b7280',
+                  border: displayMode === 'illustration' ? 'none' : '1px solid #e5e7eb'
+                }}
+              >
+                🎨 イラスト
+              </button>
+            </div>
+          </div>
+          
+          <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem', fontWeight: 500 }}>回答モード</p>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button onClick={() => startGame('choice')} style={{ padding: '0.875rem 1.75rem', fontSize: '1rem', background: '#10b981', color: 'white' }}>
               🎯 選択肢モード
             </button>
-            <button onClick={() => startGame('input')} style={{ padding: '1.2rem 2.5rem', fontSize: '1.2rem', background: 'linear-gradient(135deg, #3b82f6, #2563eb)', color: 'white', fontWeight: 700 }}>
+            <button onClick={() => startGame('input')} style={{ padding: '0.875rem 1.75rem', fontSize: '1rem', background: '#3b82f6', color: 'white' }}>
               ⌨️ 入力モード
             </button>
           </div>
@@ -195,14 +252,14 @@ function App() {
 
   return (
     <div className="app-container">
-      <div className="glass-panel bounce-in" style={{ padding: '2rem', width: '100%', maxWidth: '650px', position: 'relative' }}>
-        <button onClick={resetGame} style={{ position: 'absolute', top: '1rem', left: '1rem', padding: '0.6rem 1rem', fontSize: '0.9rem', background: 'rgba(255,255,255,0.2)', color: 'white' }}>
+      <div className="glass-panel bounce-in" style={{ padding: '2rem', width: '100%', maxWidth: '600px', position: 'relative' }}>
+        <button onClick={resetGame} style={{ position: 'absolute', top: '1rem', left: '1rem', padding: '0.5rem 0.875rem', fontSize: '0.875rem', background: '#f3f4f6', color: '#374151' }}>
           ← 戻る
         </button>
         <div style={{ position: 'absolute', top: '1rem', right: '1rem', textAlign: 'right' }}>
-          <div style={{ fontSize: '0.9rem', opacity: 0.8, marginBottom: '0.3rem' }}>スコア: <strong>{score}</strong></div>
-          <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#FFD700' }}>
-            {currentStreak > 0 && <span className="streak-fire">🔥</span>}
+          <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>スコア: <strong style={{ color: '#1f2937' }}>{score}</strong></div>
+          <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#f59e0b' }}>
+            {currentStreak > 0 && '🔥'}
             連勝: {currentStreak}
           </div>
         </div>
@@ -210,10 +267,12 @@ function App() {
           <img 
             src={currentPokemon.image} 
             alt="Pokemon" 
-            className={showResult ? 'pokemon-reveal' : 'pokemon-silhouette'}
-            style={{ width: '280px', height: '280px', objectFit: 'contain' }} 
+            className={displayMode === 'silhouette' && !showResult ? 'pokemon-silhouette' : 'pokemon-reveal'}
+            style={{ width: '250px', height: '250px', objectFit: 'contain' }} 
           />
-          <h3 style={{ marginTop: '1.5rem', fontSize: '1.5rem', fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>ポケモン だーれだ？</h3>
+          <h3 style={{ marginTop: '1rem', fontSize: '1.25rem', fontWeight: 600, color: '#374151' }}>
+            {displayMode === 'silhouette' ? 'ポケモン だーれだ？' : 'このポケモンの名前は？'}
+          </h3>
         </div>
 
         {gameMode === 'choice' && (
@@ -236,18 +295,18 @@ function App() {
         )}
 
         {showResult && (
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(0,0,0,0.3)', borderRadius: '24px', backdropFilter: 'blur(5px)' }}>
-            <div className="glass-panel bounce-in" style={{ padding: '2.5rem', textAlign: 'center', background: isCorrect ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(5, 150, 105, 0.95))' : 'linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(220, 38, 38, 0.95))', border: 'none', width: '85%', maxWidth: '450px', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
-              <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(0,0,0,0.1)', borderRadius: '16px' }}>
+            <div className="glass-panel bounce-in" style={{ padding: '2rem', textAlign: 'center', background: isCorrect ? '#f0fdf4' : '#fef2f2', border: isCorrect ? '2px solid #10b981' : '2px solid #ef4444', width: '85%', maxWidth: '400px' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>
                 {isCorrect ? '🎉' : '😢'}
               </div>
-              <h2 style={{ fontSize: '2.5rem', color: 'white', marginBottom: '1.5rem', fontWeight: 900, textShadow: '0 4px 8px rgba(0,0,0,0.3)' }}>
+              <h2 style={{ fontSize: '1.75rem', color: isCorrect ? '#10b981' : '#ef4444', marginBottom: '1rem', fontWeight: 700 }}>
                 {isCorrect ? '正解！' : '残念...'}
               </h2>
-              <p style={{ fontSize: '1.3rem', marginBottom: '2rem', color: 'white', fontWeight: 600 }}>
-                正解は <strong style={{ fontSize: '1.5rem', textDecoration: 'underline' }}>{currentPokemon.name}</strong> です！
+              <p style={{ fontSize: '1.125rem', marginBottom: '1.5rem', color: '#374151', fontWeight: 500 }}>
+                正解は <strong style={{ fontSize: '1.25rem' }}>{currentPokemon.name}</strong> です！
               </p>
-              <button onClick={nextQuestion} style={{ background: 'rgba(0,0,0,0.3)', color: 'white', padding: '1.2rem 2.5rem', fontSize: '1.2rem', fontWeight: 700, border: '2px solid rgba(255,255,255,0.5)' }}>
+              <button onClick={nextQuestion} style={{ background: '#1f2937', color: 'white', padding: '0.875rem 2rem', fontSize: '1rem', fontWeight: 600 }}>
                 次の問題へ →
               </button>
             </div>
