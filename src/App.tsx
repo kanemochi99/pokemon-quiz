@@ -10,7 +10,17 @@ interface Pokemon {
   id: number;
   name: string;
   image: string;
+  cry?: string;
+  flavorText?: string;
+  types?: string[];
+  genus?: string;
 }
+
+const TYPE_NAME_MAP: Record<string, string> = {
+  normal: 'ノーマル', fire: 'ほのお', water: 'みず', grass: 'くさ', electric: 'でんき', ice: 'こおり',
+  fighting: 'かくとう', poison: 'どく', ground: 'じめん', flying: 'ひこう', psychic: 'エスパー',
+  bug: 'むし', rock: 'いわ', ghost: 'ゴースト', dragon: 'ドラゴン', steel: 'はがね', dark: 'あく', fairy: 'フェアリー'
+};
 
 const THEMES: { id: ThemeType; color: string; label: string }[] = [
   { id: 'light', color: '#ffffff', label: '標準' },
@@ -21,42 +31,57 @@ const THEMES: { id: ThemeType; color: string; label: string }[] = [
   { id: 'green', color: '#10b981', label: 'グリーン' },
 ];
 
-const MAX_POKEMON_ID = 1025;
+const MAX_POKEMON_ID = 1010;
 
 const getRandomId = () => Math.floor(Math.random() * MAX_POKEMON_ID) + 1;
 
-const fetchPokemonName = async (id: number): Promise<string> => {
-  const response = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`);
-  const data = await response.json();
-  const jaName = data.names.find((n: any) => n.language.name === 'ja')?.name;
-  return jaName || 'Unknown Pokemon';
-};
-
-const fetchPokemonImage = async (id: number): Promise<string> => {
-  const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
-  const data = await response.json();
-  return data.sprites.other['official-artwork'].front_default;
-};
-
-const fetchRandomPokemon = async (): Promise<Pokemon> => {
-  const id = getRandomId();
-  const [name, image] = await Promise.all([
-    fetchPokemonName(id),
-    fetchPokemonImage(id),
+const fetchPokemonData = async (id: number): Promise<Pokemon> => {
+  const [resPokemon, resSpecies] = await Promise.all([
+    fetch(`https://pokeapi.co/api/v2/pokemon/${id}`),
+    fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`)
   ]);
-  return { id, name, image };
+  
+  const [data, speciesData] = await Promise.all([
+    resPokemon.json(),
+    resSpecies.json()
+  ]);
+
+  const jaName = speciesData.names.find((n: any) => n.language.name === 'ja')?.name || data.name;
+  const jaGenus = speciesData.genera.find((g: any) => g.language.name === 'ja')?.genus || '';
+  const jaFlavorText = speciesData.flavor_text_entries
+    .find((f: any) => f.language.name === 'ja' || f.language.name === 'ja-Hrkt')?.flavor_text || '';
+  
+  const jaTypes = data.types.map((t: any) => TYPE_NAME_MAP[t.type.name] || t.type.name);
+  
+  return {
+    id,
+    name: jaName,
+    image: data.sprites.other['official-artwork'].front_default,
+    cry: data.cries?.latest || data.cries?.legacy,
+    flavorText: jaFlavorText.replace(/\f/g, '').replace(/\n/g, ' '),
+    types: jaTypes,
+    genus: jaGenus
+  };
 };
 
 const fetchQuizData = async () => {
-  const correctPokemon = await fetchRandomPokemon();
-  const wrongPromises = [];
-  while (wrongPromises.length < 3) {
+  const correctPokemon = await fetchPokemonData(getRandomId());
+  const wrongIds: number[] = [];
+  while (wrongIds.length < 3) {
     const id = getRandomId();
-    if (id !== correctPokemon.id) {
-      wrongPromises.push(fetchPokemonName(id));
+    if (id !== correctPokemon.id && !wrongIds.includes(id)) {
+      wrongIds.push(id);
     }
   }
-  const wrongNames = await Promise.all(wrongPromises);
+  
+  const wrongNames = await Promise.all(
+    wrongIds.map(async (id) => {
+      const res = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`);
+      const data = await res.json();
+      return data.names.find((n: any) => n.language.name === 'ja')?.name || 'Unknown';
+    })
+  );
+  
   const choices = [...wrongNames, correctPokemon.name].sort(() => Math.random() - 0.5);
   return { correctPokemon, choices };
 };
@@ -75,6 +100,13 @@ function App() {
   const [showResult, setShowResult] = useState(false);
   const [inputValue, setInputValue] = useState('');
   
+  // Hint and Collection state
+  const [hintLevel, setHintLevel] = useState(0); // 0: none, 1: types, 2: first char
+  const [caughtPokemon, setCaughtPokemon] = useState<number[]>(() => 
+    JSON.parse(localStorage.getItem('caughtPokemon') || '[]')
+  );
+  const [showCollection, setShowCollection] = useState(false);
+
   // High score and streak
   const [bestScore, setBestScore] = useState(() => Number(localStorage.getItem('bestScore')) || 0);
   const [currentStreak, setCurrentStreak] = useState(0);
@@ -90,7 +122,7 @@ function App() {
   React.useEffect(() => {
     const loadPreview = async () => {
       try {
-        const pokemon = await fetchRandomPokemon();
+        const pokemon = await fetchPokemonData(getRandomId());
         setPreviewPokemon(pokemon);
       } catch (error) {
         console.error('Failed to load preview Pokemon', error);
@@ -99,11 +131,20 @@ function App() {
     loadPreview();
   }, []);
 
+  const playCry = useCallback(() => {
+    if (currentPokemon?.cry) {
+      const audio = new Audio(currentPokemon.cry);
+      audio.volume = 0.5;
+      audio.play().catch(e => console.error('Audio play failed', e));
+    }
+  }, [currentPokemon]);
+
   const loadQuestion = useCallback(async () => {
     setIsLoading(true);
     setIsCorrect(null);
     setShowResult(false);
     setInputValue('');
+    setHintLevel(0);
     try {
       const data = await fetchQuizData();
       setCurrentPokemon(data.correctPokemon);
@@ -127,7 +168,22 @@ function App() {
     const correct = currentPokemon.name === answer;
     setIsCorrect(correct);
     
+    // Play cry on reveal if silhouette mode
+    if (displayMode === 'silhouette') {
+      playCry();
+    }
+
     if (correct) {
+      // Add to collection
+      setCaughtPokemon(prev => {
+        if (!prev.includes(currentPokemon.id)) {
+          const next = [...prev, currentPokemon.id];
+          localStorage.setItem('caughtPokemon', JSON.stringify(next));
+          return next;
+        }
+        return prev;
+      });
+
       // Confetti celebration!
       confetti({
         particleCount: 100,
@@ -163,7 +219,7 @@ function App() {
     
     setTotalQuestions(totalQuestions + 1);
     setShowResult(true);
-  }, [currentPokemon, score, bestScore, currentStreak, maxStreak, totalQuestions]);
+  }, [currentPokemon, score, bestScore, currentStreak, maxStreak, totalQuestions, playCry, displayMode]);
 
   const nextQuestion = useCallback(() => {
     loadQuestion();
@@ -179,6 +235,34 @@ function App() {
       checkAnswer(inputValue.trim());
     }
   };
+
+  // Start Screen
+  // Collection View
+  if (showCollection) {
+    return (
+      <div className="app-container">
+        <div className="glass-panel fade-in" style={{ padding: '2rem', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h2 style={{ fontSize: '1.5rem' }}>📖 集めたポケモン ({caughtPokemon.length})</h2>
+            <button onClick={() => setShowCollection(false)} style={{ background: 'var(--bg-gray)', color: 'var(--text-secondary)' }}>閉じる</button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '1rem' }}>
+            {caughtPokemon.sort((a,b) => a-b).map(id => (
+              <div key={id} style={{ textAlign: 'center', background: 'var(--bg-gray)', borderRadius: '8px', padding: '0.5rem' }}>
+                <img 
+                  src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`} 
+                  alt="caught" 
+                  style={{ width: '60px', height: '60px', objectFit: 'contain' }} 
+                />
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>No.{id}</div>
+              </div>
+            ))}
+          </div>
+          {caughtPokemon.length === 0 && <p style={{ textAlign: 'center', marginTop: '2rem', color: 'var(--text-secondary)' }}>まだ一匹も捕まえていないようです...</p>}
+        </div>
+      </div>
+    );
+  }
 
   // Start Screen
   if (!gameMode) {
@@ -204,6 +288,9 @@ function App() {
             <div className="score-badge">
               🔥 最大連勝: {maxStreak}
             </div>
+            <button onClick={() => setShowCollection(true)} style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', background: 'var(--bg-gray)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 600 }}>
+              📖 図鑑: {caughtPokemon.length}
+            </button>
           </div>
           
           <div style={{ marginBottom: '1.5rem' }}>
@@ -221,7 +308,7 @@ function App() {
             </div>
           </div>
 
-          <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '2rem', justifyContent: 'center' }}>
+          <div style={{ marginBottom: '2rem', display: 'flex', gap: '2rem', justifyContent: 'center' }}>
             <div>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 600 }}>表示モード</p>
               <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center', background: 'var(--bg-gray)', padding: '0.25rem', borderRadius: '8px' }}>
@@ -256,10 +343,10 @@ function App() {
           </div>
           
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => startGame('choice')} style={{ padding: '1rem 2rem', fontSize: '1rem', background: 'var(--success)', color: 'white', flex: 1, minWidth: '140px' }}>
+            <button onClick={() => startGame('choice')} style={{ padding: '1rem 2rem', fontSize: '1.125rem', background: 'var(--success)', color: 'white', flex: 1, minWidth: '140px' }}>
               🎯 選択肢
             </button>
-            <button onClick={() => startGame('input')} style={{ padding: '1rem 2rem', fontSize: '1rem', background: 'var(--primary-color)', color: 'white', flex: 1, minWidth: '140px' }}>
+            <button onClick={() => startGame('input')} style={{ padding: '1rem 2rem', fontSize: '1.125rem', background: 'var(--primary-color)', color: 'white', flex: 1, minWidth: '140px' }}>
               ⌨️ 入力
             </button>
           </div>
@@ -295,16 +382,44 @@ function App() {
             連勝: {currentStreak}
           </div>
         </div>
-        <div style={{ textAlign: 'center', marginBottom: '2rem', marginTop: '2rem' }}>
-          <img 
-            src={currentPokemon.image} 
-            alt="Pokemon" 
-            className={displayMode === 'silhouette' && !showResult ? 'pokemon-silhouette' : 'pokemon-reveal'}
-            style={{ width: '250px', height: '250px', objectFit: 'contain' }} 
-          />
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem', marginTop: '2rem' }}>
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            <img 
+              src={currentPokemon.image} 
+              alt="Pokemon" 
+              className={displayMode === 'silhouette' && !showResult ? 'pokemon-silhouette' : 'pokemon-reveal'}
+              style={{ width: '250px', height: '250px', objectFit: 'contain' }} 
+            />
+            {currentPokemon.cry && !showResult && (
+              <button 
+                onClick={playCry} 
+                style={{ position: 'absolute', bottom: '0', right: '0', background: 'var(--bg-panel)', padding: '0.5rem', borderRadius: '50%', border: '1px solid var(--border-color)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
+                title="鳴き声を聞く"
+              >
+                🔊
+              </button>
+            )}
+          </div>
           <h3 style={{ marginTop: '1rem', fontSize: '1.25rem', fontWeight: 600 }}>
             {displayMode === 'silhouette' ? 'ポケモン だーれだ？' : 'このポケモンの名前は？'}
           </h3>
+          
+          {hintLevel > 0 && (
+            <div className="fade-in" style={{ marginTop: '0.5rem', fontSize: '0.875rem', padding: '0.5rem', background: 'var(--bg-gray)', borderRadius: '8px' }}>
+              💡 <strong>ヒント:</strong> {hintLevel === 1 ? `タイプ: ${currentPokemon.types?.join(' / ')}` : `最初の文字: ${currentPokemon.name[0]}`}
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', justifyContent: 'center' }}>
+          {!showResult && hintLevel < 2 && (
+            <button 
+              onClick={() => setHintLevel(prev => prev + 1)} 
+              style={{ padding: '0.4rem 1rem', fontSize: '0.75rem', background: 'var(--bg-gray)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}
+            >
+              💡 ヒントを出す
+            </button>
+          )}
         </div>
 
         {gameMode === 'choice' && (
@@ -340,18 +455,36 @@ function App() {
         )}
 
         {showResult && (
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(0,0,0,0.1)', borderRadius: '16px' }}>
-            <div className="glass-panel bounce-in" style={{ padding: '2rem', textAlign: 'center', background: 'var(--bg-panel)', border: isCorrect ? '2px solid var(--success)' : '2px solid var(--error)', width: '85%', maxWidth: '400px' }}>
-              <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(0,0,0,0.1)', borderRadius: '16px', zIndex: 10 }}>
+            <div className="glass-panel bounce-in" style={{ padding: '2rem', textAlign: 'center', background: 'var(--bg-panel)', border: isCorrect ? '2px solid var(--success)' : '2px solid var(--error)', width: '90%', maxWidth: '450px', maxHeight: '90%', overflowY: 'auto' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>
                 {isCorrect ? '🎉' : '😢'}
               </div>
-              <h2 style={{ fontSize: '1.75rem', color: isCorrect ? 'var(--success)' : 'var(--error)', marginBottom: '1rem', fontWeight: 700 }}>
+              <h2 style={{ fontSize: '1.5rem', color: isCorrect ? 'var(--success)' : 'var(--error)', marginBottom: '0.25rem', fontWeight: 700 }}>
                 {isCorrect ? '正解！' : '残念...'}
               </h2>
-              <p style={{ fontSize: '1.125rem', marginBottom: '1.5rem', fontWeight: 500 }}>
-                正解は <strong style={{ fontSize: '1.25rem' }}>{currentPokemon.name}</strong> です！
+              <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                {currentPokemon.genus}
               </p>
-              <button onClick={nextQuestion} style={{ background: 'var(--primary-color)', color: 'white', padding: '0.875rem 2rem', fontSize: '1rem', fontWeight: 600 }}>
+              <h1 style={{ fontSize: '2rem', marginBottom: '1rem', fontWeight: 800 }}>{currentPokemon.name}</h1>
+              
+              <div style={{ background: 'var(--bg-gray)', padding: '1rem', borderRadius: '12px', textAlign: 'left', marginBottom: '1.5rem' }}>
+                <p style={{ fontSize: '0.875rem', lineHeight: '1.6', color: 'var(--text-primary)' }}>
+                  {currentPokemon.flavorText || 'データが見つかりませんでした。'}
+                </p>
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                  {currentPokemon.types?.map(type => (
+                    <span key={type} style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', background: 'var(--bg-panel)', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
+                      {type}
+                    </span>
+                  ))}
+                  {currentPokemon.cry && (
+                    <button onClick={playCry} style={{ background: 'transparent', padding: '0', boxShadow: 'none', fontSize: '1rem', marginLeft: 'auto' }}>🔊</button>
+                  )}
+                </div>
+              </div>
+              
+              <button onClick={nextQuestion} style={{ background: 'var(--primary-color)', color: 'white', padding: '0.875rem 2.5rem', fontSize: '1.125rem', fontWeight: 600, width: '100%' }}>
                 次へ →
               </button>
             </div>
