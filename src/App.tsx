@@ -157,6 +157,7 @@ function App() {
   // Filters and Performance
   const [selectedGen, setSelectedGen] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
+  const [showFilters, setShowFilters] = useState(false);
   const [quizBuffer, setQuizBuffer] = useState<any>(null);
 
   // High score and streak
@@ -381,65 +382,85 @@ function App() {
             </div>
           </div>
 
-          <div style={{ marginBottom: '1.5rem' }}>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 600 }}>どのちほうをだす？</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.4rem', justifyContent: 'center' }}>
-              {['all', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map(gen => (
-                <button 
-                  key={gen} 
-                  onClick={() => setSelectedGen(gen)}
-                  style={{ 
-                    padding: '0.4rem 0.2rem', 
-                    fontSize: '0.7rem', 
-                    background: selectedGen === gen ? 'var(--primary-color)' : 'var(--bg-gray)',
-                    color: selectedGen === gen ? 'white' : 'var(--text-primary)',
-                    boxShadow: 'none',
-                    borderRadius: '6px',
-                    border: '1px solid var(--border-color)'
-                  }}
-                >
-                  {gen === 'all' ? 'すべて' : `${gen}`}
-                </button>
-              ))}
-            </div>
-          </div>
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            style={{ 
+              display: 'block', 
+              margin: '0 auto 1.5rem', 
+              fontSize: '0.875rem', 
+              color: 'var(--text-secondary)',
+              background: 'none',
+              border: 'none',
+              textDecoration: 'underline',
+              cursor: 'pointer'
+            }}
+          >
+            {showFilters ? '▲ せっていを とじる' : '⚙️ くわしい せってい'}
+          </button>
 
-          <div style={{ marginBottom: '1.5rem' }}>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 600 }}>どのタイプをだす？</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.3rem', justifyContent: 'center' }}>
-              <button 
-                onClick={() => setSelectedType('all')}
-                style={{ 
-                  gridColumn: 'span 2',
-                  padding: '0.4rem 0.2rem', fontSize: '0.7rem', 
-                  background: selectedType === 'all' ? 'var(--primary-color)' : 'var(--bg-gray)',
-                  color: selectedType === 'all' ? 'white' : 'var(--text-primary)',
-                  boxShadow: 'none', borderRadius: '6px', border: '1px solid var(--border-color)'
-                }}
-              >
-                すべて
-              </button>
-              {Object.entries(TYPE_NAME_MAP).map(([en, ja]) => (
-                <button 
-                  key={en} 
-                  onClick={() => setSelectedType(en)}
-                  style={{ 
-                    padding: '0.4rem 0.1rem', 
-                    fontSize: '0.65rem', 
-                    background: selectedType === en ? 'var(--primary-color)' : 'var(--bg-gray)',
-                    color: selectedType === en ? 'white' : 'var(--text-primary)',
-                    boxShadow: 'none',
-                    borderRadius: '6px',
-                    border: '1px solid var(--border-color)',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden'
-                  }}
-                >
-                  {ja}
-                </button>
-              ))}
+          {showFilters && (
+            <div className="fade-in" style={{ marginBottom: '1.5rem', background: 'var(--bg-gray)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+              <div style={{ marginBottom: '1.25rem' }}>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 600 }}>どのちほうをだす？</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.4rem', justifyContent: 'center' }}>
+                  {['all', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map(gen => (
+                    <button 
+                      key={gen} 
+                      onClick={() => setSelectedGen(gen)}
+                      style={{ 
+                        padding: '0.4rem 0.2rem', 
+                        fontSize: '0.7rem', 
+                        background: selectedGen === gen ? 'var(--primary-color)' : 'white',
+                        color: selectedGen === gen ? 'white' : 'var(--text-primary)',
+                        boxShadow: 'none',
+                        borderRadius: '6px',
+                        border: '1px solid var(--border-color)'
+                      }}
+                    >
+                      {gen === 'all' ? 'すべて' : `${gen}`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 600 }}>どのタイプをだす？</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.3rem', justifyContent: 'center' }}>
+                  <button 
+                    onClick={() => setSelectedType('all')}
+                    style={{ 
+                      gridColumn: 'span 2',
+                      padding: '0.4rem 0.2rem', fontSize: '0.7rem', 
+                      background: selectedType === 'all' ? 'var(--primary-color)' : 'white',
+                      color: selectedType === 'all' ? 'white' : 'var(--text-primary)',
+                      boxShadow: 'none', borderRadius: '6px', border: '1px solid var(--border-color)'
+                    }}
+                  >
+                    すべて
+                  </button>
+                  {Object.entries(TYPE_NAME_MAP).map(([en, ja]) => (
+                    <button 
+                      key={en} 
+                      onClick={() => setSelectedType(en)}
+                      style={{ 
+                        padding: '0.4rem 0.1rem', 
+                        fontSize: '0.65rem', 
+                        background: selectedType === en ? 'var(--primary-color)' : 'white',
+                        color: selectedType === en ? 'white' : 'var(--text-primary)',
+                        boxShadow: 'none',
+                        borderRadius: '6px',
+                        border: '1px solid var(--border-color)',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden'
+                      }}
+                    >
+                      {ja}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
+          )}
 
           <div style={{ marginBottom: '2rem', display: 'flex', gap: '2rem', justifyContent: 'center' }}>
             <div>
