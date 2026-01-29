@@ -34,9 +34,23 @@ const THEMES: { id: ThemeType; color: string; label: string }[] = [
 ];
 
 const MAX_POKEMON_ID = 1010;
-const SHINY_RATE = 0.05; // 5% chance for shiny (1/20)
+const SHINY_RATE = 0.05;
 
-const getRandomId = () => Math.floor(Math.random() * MAX_POKEMON_ID) + 1;
+const GEN_RANGES: Record<string, [number, number]> = {
+  '1': [1, 151],
+  '2': [152, 251],
+  '3': [252, 386],
+  '4': [387, 493],
+  '5': [494, 649],
+  '6': [650, 721],
+  '7': [722, 809],
+  '8': [810, 905],
+  '9': [906, 1010],
+  'all': [1, 1010]
+};
+
+const getRandomId = (min = 1, max = MAX_POKEMON_ID) => 
+  Math.floor(Math.random() * (max - min + 1)) + min;
 
 const fetchPokemonData = async (id: number, forceShiny: boolean = false): Promise<Pokemon> => {
   const [resPokemon, resSpecies] = await Promise.all([
@@ -71,11 +85,37 @@ const fetchPokemonData = async (id: number, forceShiny: boolean = false): Promis
   };
 };
 
-const fetchQuizData = async () => {
-  const correctPokemon = await fetchPokemonData(getRandomId());
+const fetchQuizData = async (gen: string = 'all', type: string = 'all') => {
+  let min = 1, max = MAX_POKEMON_ID;
+  if (gen !== 'all') {
+    [min, max] = GEN_RANGES[gen] || GEN_RANGES['all'];
+  }
+
+  let possibleIds: number[] = [];
+  
+  if (type !== 'all') {
+    // Fetch IDs for the specific type
+    const res = await fetch(`https://pokeapi.co/api/v2/type/${type}`);
+    const data = await res.json();
+    possibleIds = data.pokemon
+      .map((p: any) => {
+        const urlParts = p.pokemon.url.split('/');
+        return parseInt(urlParts[urlParts.length - 2]);
+      })
+      .filter((id: number) => id >= min && id <= max);
+  }
+
+  const getRandomTargetId = () => {
+    if (possibleIds.length > 0) {
+      return possibleIds[Math.floor(Math.random() * possibleIds.length)];
+    }
+    return getRandomId(min, max);
+  };
+
+  const correctPokemon = await fetchPokemonData(getRandomTargetId());
   const wrongIds: number[] = [];
   while (wrongIds.length < 3) {
-    const id = getRandomId();
+    const id = getRandomTargetId();
     if (id !== correctPokemon.id && !wrongIds.includes(id)) {
       wrongIds.push(id);
     }
@@ -113,6 +153,11 @@ function App() {
     JSON.parse(localStorage.getItem('caughtPokemon') || '[]')
   );
   const [showCollection, setShowCollection] = useState(false);
+  
+  // Filters and Performance
+  const [selectedGen, setSelectedGen] = useState('all');
+  const [selectedType, setSelectedType] = useState('all');
+  const [quizBuffer, setQuizBuffer] = useState<any>(null);
 
   // High score and streak
   const [bestScore, setBestScore] = useState(() => Number(localStorage.getItem('bestScore')) || 0);
@@ -125,18 +170,29 @@ function App() {
     localStorage.setItem('appTheme', theme);
   }, [theme]);
 
-  // Load preview Pokemon on mount
+  // Load initial preview and buffer
   React.useEffect(() => {
-    const loadPreview = async () => {
+    const init = async () => {
       try {
-        const pokemon = await fetchPokemonData(getRandomId());
-        setPreviewPokemon(pokemon);
+        const preview = await fetchPokemonData(getRandomId());
+        setPreviewPokemon(preview);
+        const buffer = await fetchQuizData(selectedGen, selectedType);
+        setQuizBuffer(buffer);
       } catch (error) {
-        console.error('Failed to load preview Pokemon', error);
+        console.error('Failed to init', error);
       }
     };
-    loadPreview();
-  }, []);
+    init();
+  }, [selectedGen, selectedType]);
+
+  const prefetchNextQuestion = useCallback(async () => {
+    try {
+      const data = await fetchQuizData(selectedGen, selectedType);
+      setQuizBuffer(data);
+    } catch (error) {
+      console.error('Prefetch failed', error);
+    }
+  }, [selectedGen, selectedType]);
 
   const playCry = useCallback(() => {
     if (currentPokemon?.cry) {
@@ -147,20 +203,30 @@ function App() {
   }, [currentPokemon]);
 
   const loadQuestion = useCallback(async () => {
-    setIsLoading(true);
     setIsCorrect(null);
     setShowResult(false);
     setInputValue('');
     setHintLevel(0);
-    try {
-      const data = await fetchQuizData();
-      setCurrentPokemon(data.correctPokemon);
-      setChoices(data.choices);
-    } catch (error) {
-      console.error('Failed to load question', error);
+    
+    if (quizBuffer) {
+      setCurrentPokemon(quizBuffer.correctPokemon);
+      setChoices(quizBuffer.choices);
+      // Clear buffer and trigger next fetch immediately
+      setQuizBuffer(null);
+      prefetchNextQuestion();
+    } else {
+      setIsLoading(true);
+      try {
+        const data = await fetchQuizData(selectedGen, selectedType);
+        setCurrentPokemon(data.correctPokemon);
+        setChoices(data.choices);
+        prefetchNextQuestion();
+      } catch (error) {
+        console.error('Failed to load question', error);
+      }
+      setIsLoading(false);
     }
-    setIsLoading(false);
-  }, []);
+  }, [quizBuffer, selectedGen, selectedType, prefetchNextQuestion]);
 
   const startGame = useCallback((mode: GameMode) => {
     setGameMode(mode);
@@ -311,6 +377,66 @@ function App() {
                   onClick={() => setTheme(t.id)}
                   title={t.label}
                 />
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '1.5rem' }}>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 600 }}>どのちほうをだす？</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.4rem', justifyContent: 'center' }}>
+              {['all', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map(gen => (
+                <button 
+                  key={gen} 
+                  onClick={() => setSelectedGen(gen)}
+                  style={{ 
+                    padding: '0.4rem 0.2rem', 
+                    fontSize: '0.7rem', 
+                    background: selectedGen === gen ? 'var(--primary-color)' : 'var(--bg-gray)',
+                    color: selectedGen === gen ? 'white' : 'var(--text-primary)',
+                    boxShadow: 'none',
+                    borderRadius: '6px',
+                    border: '1px solid var(--border-color)'
+                  }}
+                >
+                  {gen === 'all' ? 'すべて' : `${gen}`}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '1.5rem' }}>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 600 }}>どのタイプをだす？</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.3rem', justifyContent: 'center' }}>
+              <button 
+                onClick={() => setSelectedType('all')}
+                style={{ 
+                  gridColumn: 'span 2',
+                  padding: '0.4rem 0.2rem', fontSize: '0.7rem', 
+                  background: selectedType === 'all' ? 'var(--primary-color)' : 'var(--bg-gray)',
+                  color: selectedType === 'all' ? 'white' : 'var(--text-primary)',
+                  boxShadow: 'none', borderRadius: '6px', border: '1px solid var(--border-color)'
+                }}
+              >
+                すべて
+              </button>
+              {Object.entries(TYPE_NAME_MAP).map(([en, ja]) => (
+                <button 
+                  key={en} 
+                  onClick={() => setSelectedType(en)}
+                  style={{ 
+                    padding: '0.4rem 0.1rem', 
+                    fontSize: '0.65rem', 
+                    background: selectedType === en ? 'var(--primary-color)' : 'var(--bg-gray)',
+                    color: selectedType === en ? 'white' : 'var(--text-primary)',
+                    boxShadow: 'none',
+                    borderRadius: '6px',
+                    border: '1px solid var(--border-color)',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden'
+                  }}
+                >
+                  {ja}
+                </button>
               ))}
             </div>
           </div>

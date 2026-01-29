@@ -246,3 +246,24 @@ h1, h2, h3 {
   border-color: var(--primary-color);
   transform: scale(1.1);
 }
+
+/* Shiny Pokemon Effects */
+.shiny-glow {
+  filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8)) drop-shadow(0 0 40px rgba(255, 215, 0, 0.4));
+  animation: shiny-pulse 2s ease-in-out infinite;
+}
+
+@keyframes shiny-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8)) drop-shadow(0 0 40px rgba(255, 215, 0, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 30px rgba(255, 215, 0, 1)) drop-shadow(0 0 60px rgba(255, 215, 0, 0.6));
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
