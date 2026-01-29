@@ -4,12 +4,22 @@ import confetti from 'canvas-confetti';
 
 type GameMode = 'choice' | 'input' | null;
 type DisplayMode = 'silhouette' | 'illustration';
+type ThemeType = 'light' | 'dark' | 'blue' | 'red' | 'pink' | 'green';
 
 interface Pokemon {
   id: number;
   name: string;
   image: string;
 }
+
+const THEMES: { id: ThemeType; color: string; label: string }[] = [
+  { id: 'light', color: '#ffffff', label: '標準' },
+  { id: 'dark', color: '#111827', label: 'ダーク' },
+  { id: 'blue', color: '#3b82f6', label: 'ブルー' },
+  { id: 'red', color: '#ef4444', label: 'レッド' },
+  { id: 'pink', color: '#ec4899', label: 'ピンク' },
+  { id: 'green', color: '#10b981', label: 'グリーン' },
+];
 
 const MAX_POKEMON_ID = 1025;
 
@@ -54,6 +64,7 @@ const fetchQuizData = async () => {
 function App() {
   const [gameMode, setGameMode] = useState<GameMode>(null);
   const [displayMode, setDisplayMode] = useState<DisplayMode>('silhouette');
+  const [theme, setTheme] = useState<ThemeType>(() => (localStorage.getItem('appTheme') as ThemeType) || 'light');
   const [currentPokemon, setCurrentPokemon] = useState<Pokemon | null>(null);
   const [previewPokemon, setPreviewPokemon] = useState<Pokemon | null>(null);
   const [choices, setChoices] = useState<string[]>([]);
@@ -68,6 +79,12 @@ function App() {
   const [bestScore, setBestScore] = useState(() => Number(localStorage.getItem('bestScore')) || 0);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [maxStreak, setMaxStreak] = useState(() => Number(localStorage.getItem('maxStreak')) || 0);
+
+  // Apply theme to body
+  React.useEffect(() => {
+    document.body.setAttribute('data-theme', theme);
+    localStorage.setItem('appTheme', theme);
+  }, [theme]);
 
   // Load preview Pokemon on mount
   React.useEffect(() => {
@@ -167,7 +184,7 @@ function App() {
   if (!gameMode) {
     return (
       <div className="app-container">
-        <div className="glass-panel fade-in" style={{ padding: '2.5rem', textAlign: 'center' }}>
+        <div className="glass-panel fade-in" style={{ padding: '2.5rem', textAlign: 'center', width: '100%' }}>
           {previewPokemon && (
             <div style={{ marginBottom: '1.5rem' }}>
               <img 
@@ -177,10 +194,10 @@ function App() {
               />
             </div>
           )}
-          <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', color: '#1f2937' }}>
+          <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
             🎮 ポケモンクイズ
           </h1>
-          <div style={{ marginBottom: '2rem', display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <div className="score-badge">
               🏆 ベスト: {bestScore}
             </div>
@@ -188,47 +205,62 @@ function App() {
               🔥 最大連勝: {maxStreak}
             </div>
           </div>
-          <p style={{ marginBottom: '1.5rem', fontSize: '1rem', color: '#6b7280' }}>
-            モードを選んでスタート！
-          </p>
           
           <div style={{ marginBottom: '1.5rem' }}>
-            <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem', fontWeight: 500 }}>表示モード</p>
-            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-              <button 
-                onClick={() => setDisplayMode('silhouette')} 
-                style={{ 
-                  padding: '0.5rem 1rem', 
-                  fontSize: '0.875rem', 
-                  background: displayMode === 'silhouette' ? '#1f2937' : '#f3f4f6',
-                  color: displayMode === 'silhouette' ? 'white' : '#6b7280',
-                  border: displayMode === 'silhouette' ? 'none' : '1px solid #e5e7eb'
-                }}
-              >
-                🕵️ シルエット
-              </button>
-              <button 
-                onClick={() => setDisplayMode('illustration')} 
-                style={{ 
-                  padding: '0.5rem 1rem', 
-                  fontSize: '0.875rem', 
-                  background: displayMode === 'illustration' ? '#1f2937' : '#f3f4f6',
-                  color: displayMode === 'illustration' ? 'white' : '#6b7280',
-                  border: displayMode === 'illustration' ? 'none' : '1px solid #e5e7eb'
-                }}
-              >
-                🎨 イラスト
-              </button>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 600 }}>テーマを選択</p>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+              {THEMES.map((t) => (
+                <div 
+                  key={t.id}
+                  className={`theme-circle ${theme === t.id ? 'active' : ''}`}
+                  style={{ backgroundColor: t.color, border: t.id === 'light' ? '1px solid #e5e7eb' : 'none' }}
+                  onClick={() => setTheme(t.id)}
+                  title={t.label}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '2rem', justifyContent: 'center' }}>
+            <div>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 600 }}>表示モード</p>
+              <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center', background: 'var(--bg-gray)', padding: '0.25rem', borderRadius: '8px' }}>
+                <button 
+                  onClick={() => setDisplayMode('silhouette')} 
+                  style={{ 
+                    padding: '0.5rem 1rem', 
+                    fontSize: '0.875rem', 
+                    background: displayMode === 'silhouette' ? 'var(--primary-color)' : 'transparent',
+                    color: displayMode === 'silhouette' ? 'white' : 'var(--text-secondary)',
+                    boxShadow: 'none',
+                    borderRadius: '6px'
+                  }}
+                >
+                  影
+                </button>
+                <button 
+                  onClick={() => setDisplayMode('illustration')} 
+                  style={{ 
+                    padding: '0.5rem 1rem', 
+                    fontSize: '0.875rem', 
+                    background: displayMode === 'illustration' ? 'var(--primary-color)' : 'transparent',
+                    color: displayMode === 'illustration' ? 'white' : 'var(--text-secondary)',
+                    boxShadow: 'none',
+                    borderRadius: '6px'
+                  }}
+                >
+                  絵
+                </button>
+              </div>
             </div>
           </div>
           
-          <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.5rem', fontWeight: 500 }}>回答モード</p>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => startGame('choice')} style={{ padding: '0.875rem 1.75rem', fontSize: '1rem', background: '#10b981', color: 'white' }}>
-              🎯 選択肢モード
+            <button onClick={() => startGame('choice')} style={{ padding: '1rem 2rem', fontSize: '1rem', background: 'var(--success)', color: 'white', flex: 1, minWidth: '140px' }}>
+              🎯 選択肢
             </button>
-            <button onClick={() => startGame('input')} style={{ padding: '0.875rem 1.75rem', fontSize: '1rem', background: '#3b82f6', color: 'white' }}>
-              ⌨️ 入力モード
+            <button onClick={() => startGame('input')} style={{ padding: '1rem 2rem', fontSize: '1rem', background: 'var(--primary-color)', color: 'white', flex: 1, minWidth: '140px' }}>
+              ⌨️ 入力
             </button>
           </div>
         </div>

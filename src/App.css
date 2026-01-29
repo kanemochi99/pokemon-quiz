@@ -1,15 +1,66 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
+  /* Default (Light) */
   --primary-color: #3b82f6;
   --success: #10b981;
   --error: #ef4444;
   --text-primary: #1f2937;
   --text-secondary: #6b7280;
   --border-color: #e5e7eb;
-  --bg-white: #ffffff;
+  --bg-app: #ffffff;
+  --bg-panel: #ffffff;
   --bg-gray: #f9fafb;
-  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+[data-theme='dark'] {
+  --primary-color: #60a5fa;
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --border-color: #374151;
+  --bg-app: #111827;
+  --bg-panel: #1f2937;
+  --bg-gray: #374151;
+}
+
+[data-theme='blue'] {
+  --primary-color: #2563eb;
+  --text-primary: #1e3a8a;
+  --text-secondary: #1d4ed8;
+  --border-color: #bfdbfe;
+  --bg-app: #eff6ff;
+  --bg-panel: #ffffff;
+  --bg-gray: #dbeafe;
+}
+
+[data-theme='red'] {
+  --primary-color: #dc2626;
+  --text-primary: #7f1d1d;
+  --text-secondary: #b91c1c;
+  --border-color: #fecaca;
+  --bg-app: #fef2f2;
+  --bg-panel: #ffffff;
+  --bg-gray: #fee2e2;
+}
+
+[data-theme='pink'] {
+  --primary-color: #db2777;
+  --text-primary: #831843;
+  --text-secondary: #be185d;
+  --border-color: #fbcfe8;
+  --bg-app: #fdf2f8;
+  --bg-panel: #ffffff;
+  --bg-gray: #fce7f3;
+}
+
+[data-theme='green'] {
+  --primary-color: #059669;
+  --text-primary: #064e3b;
+  --text-secondary: #047857;
+  --border-color: #a7f3d0;
+  --bg-app: #ecfdf5;
+  --bg-panel: #ffffff;
+  --bg-gray: #d1fae5;
 }
 
 * {
@@ -19,14 +70,15 @@
 }
 
 body {
-  font-family: var(--font-family);
-  background: var(--bg-white);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg-app);
   color: var(--text-primary);
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 1rem;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .app-container {
@@ -40,15 +92,15 @@ body {
 }
 
 .glass-panel {
-  background: var(--bg-white);
+  background: var(--bg-panel);
   border-radius: 16px;
   border: 1px solid var(--border-color);
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
 }
 
 .glass-panel:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 button {
@@ -66,6 +118,7 @@ button {
 button:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  filter: brightness(1.1);
 }
 
 button:active {
@@ -83,7 +136,7 @@ input[type="text"] {
   padding: 0.75rem 1rem;
   border-radius: 8px;
   border: 1px solid var(--border-color);
-  background: var(--bg-white);
+  background: var(--bg-panel);
   font-size: 1rem;
   color: var(--text-primary);
   font-weight: 400;
@@ -108,6 +161,11 @@ h1, h2, h3 {
   animation: pulse 2s ease-in-out infinite;
 }
 
+/* For dark theme, silhouette should be white or light gray */
+[data-theme='dark'] .pokemon-silhouette {
+  filter: brightness(0) invert(1) opacity(0.8);
+}
+
 .pokemon-reveal {
   filter: none;
   animation: revealPokemon 0.4s ease-out;
@@ -120,11 +178,11 @@ h1, h2, h3 {
 
 @keyframes revealPokemon {
   0% {
-    filter: brightness(0);
+    opacity: 0.5;
     transform: scale(0.95);
   }
   100% {
-    filter: none;
+    opacity: 1;
     transform: scale(1);
   }
 }
@@ -170,7 +228,21 @@ h1, h2, h3 {
   color: var(--text-primary);
 }
 
-/* Streak indicator */
-.streak-fire {
-  display: inline-block;
+/* Theme circles */
+.theme-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform 0.2s;
+}
+
+.theme-circle:hover {
+  transform: scale(1.2);
+}
+
+.theme-circle.active {
+  border-color: var(--primary-color);
+  transform: scale(1.1);
 }
