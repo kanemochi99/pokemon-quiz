@@ -49,6 +49,19 @@ const GEN_RANGES: Record<string, [number, number]> = {
   'all': [1, 1010]
 };
 
+const REGION_NAME_MAP: Record<string, string> = {
+  '1': 'カントー',
+  '2': 'ジョウト',
+  '3': 'ホウエン',
+  '4': 'シンオウ',
+  '5': 'イッシュ',
+  '6': 'カロス',
+  '7': 'アローラ',
+  '8': 'ガラル',
+  '9': 'パルデア',
+  'all': 'すべて'
+};
+
 const getRandomId = (min = 1, max = MAX_POKEMON_ID) => 
   Math.floor(Math.random() * (max - min + 1)) + min;
 
@@ -432,7 +445,7 @@ function App() {
                         border: '1px solid var(--border-color)'
                       }}
                     >
-                      {gen === 'all' ? 'すべて' : `${gen}`}
+                      {REGION_NAME_MAP[gen]}
                     </button>
                   ))}
                 </div>
