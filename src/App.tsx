@@ -285,11 +285,11 @@ function App() {
   return (
     <div className="app-container">
       <div className="glass-panel bounce-in" style={{ padding: '2rem', width: '100%', maxWidth: '600px', position: 'relative' }}>
-        <button onClick={resetGame} style={{ position: 'absolute', top: '1rem', left: '1rem', padding: '0.5rem 0.875rem', fontSize: '0.875rem', background: '#f3f4f6', color: '#374151' }}>
+        <button onClick={resetGame} style={{ position: 'absolute', top: '1rem', left: '1rem', padding: '0.5rem 0.875rem', fontSize: '0.875rem', background: 'var(--bg-gray)', color: 'var(--text-secondary)' }}>
           ← 戻る
         </button>
         <div style={{ position: 'absolute', top: '1rem', right: '1rem', textAlign: 'right' }}>
-          <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>スコア: <strong style={{ color: '#1f2937' }}>{score}</strong></div>
+          <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>スコア: <strong style={{ color: 'var(--text-primary)' }}>{score}</strong></div>
           <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#f59e0b' }}>
             {currentStreak > 0 && '🔥'}
             連勝: {currentStreak}
@@ -302,7 +302,7 @@ function App() {
             className={displayMode === 'silhouette' && !showResult ? 'pokemon-silhouette' : 'pokemon-reveal'}
             style={{ width: '250px', height: '250px', objectFit: 'contain' }} 
           />
-          <h3 style={{ marginTop: '1rem', fontSize: '1.25rem', fontWeight: 600, color: '#374151' }}>
+          <h3 style={{ marginTop: '1rem', fontSize: '1.25rem', fontWeight: 600 }}>
             {displayMode === 'silhouette' ? 'ポケモン だーれだ？' : 'このポケモンの名前は？'}
           </h3>
         </div>
@@ -310,7 +310,20 @@ function App() {
         {gameMode === 'choice' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', width: '100%', marginTop: '1rem' }}>
             {choices.map((choice, index) => (
-              <button key={`${choice}-${index}`} onClick={() => checkAnswer(choice)} disabled={showResult} style={{ padding: '1rem', fontSize: '1rem', background: 'rgba(255, 255, 255, 0.8)', color: '#333', border: '1px solid #ddd', cursor: showResult ? 'not-allowed' : 'pointer' }}>
+              <button 
+                key={`${choice}-${index}`} 
+                onClick={() => checkAnswer(choice)} 
+                disabled={showResult} 
+                style={{ 
+                  padding: '1rem', 
+                  fontSize: '1rem', 
+                  background: 'var(--bg-gray)', 
+                  color: 'var(--text-primary)', 
+                  border: '1px solid var(--border-color)', 
+                  cursor: showResult ? 'not-allowed' : 'pointer',
+                  boxShadow: 'none'
+                }}
+              >
                 {choice}
               </button>
             ))}
@@ -319,8 +332,8 @@ function App() {
 
         {gameMode === 'input' && (
           <form onSubmit={handleInputSubmit} style={{ width: '100%', marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
-            <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} disabled={showResult} placeholder="ポケモンの名前を入力..." style={{ flex: 1, padding: '1rem', borderRadius: '8px', border: '1px solid #ccc', fontSize: '1rem', background: 'rgba(255, 255, 255, 0.9)' }} autoFocus />
-            <button type="submit" disabled={showResult || !inputValue.trim()} style={{ background: '#646cff', color: 'white', minWidth: '80px' }}>
+            <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} disabled={showResult} placeholder="名前を入力..." autoFocus />
+            <button type="submit" disabled={showResult || !inputValue.trim()} style={{ background: 'var(--primary-color)', color: 'white', minWidth: '80px' }}>
               回答
             </button>
           </form>
@@ -328,18 +341,18 @@ function App() {
 
         {showResult && (
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(0,0,0,0.1)', borderRadius: '16px' }}>
-            <div className="glass-panel bounce-in" style={{ padding: '2rem', textAlign: 'center', background: isCorrect ? '#f0fdf4' : '#fef2f2', border: isCorrect ? '2px solid #10b981' : '2px solid #ef4444', width: '85%', maxWidth: '400px' }}>
+            <div className="glass-panel bounce-in" style={{ padding: '2rem', textAlign: 'center', background: 'var(--bg-panel)', border: isCorrect ? '2px solid var(--success)' : '2px solid var(--error)', width: '85%', maxWidth: '400px' }}>
               <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>
                 {isCorrect ? '🎉' : '😢'}
               </div>
-              <h2 style={{ fontSize: '1.75rem', color: isCorrect ? '#10b981' : '#ef4444', marginBottom: '1rem', fontWeight: 700 }}>
+              <h2 style={{ fontSize: '1.75rem', color: isCorrect ? 'var(--success)' : 'var(--error)', marginBottom: '1rem', fontWeight: 700 }}>
                 {isCorrect ? '正解！' : '残念...'}
               </h2>
-              <p style={{ fontSize: '1.125rem', marginBottom: '1.5rem', color: '#374151', fontWeight: 500 }}>
+              <p style={{ fontSize: '1.125rem', marginBottom: '1.5rem', fontWeight: 500 }}>
                 正解は <strong style={{ fontSize: '1.25rem' }}>{currentPokemon.name}</strong> です！
               </p>
-              <button onClick={nextQuestion} style={{ background: '#1f2937', color: 'white', padding: '0.875rem 2rem', fontSize: '1rem', fontWeight: 600 }}>
-                次の問題へ →
+              <button onClick={nextQuestion} style={{ background: 'var(--primary-color)', color: 'white', padding: '0.875rem 2rem', fontSize: '1rem', fontWeight: 600 }}>
+                次へ →
               </button>
             </div>
           </div>
