@@ -8,20 +8,22 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      includeAssets: ['favicon.ico', 'icon-512.png'],
       manifest: {
         name: 'ポケモンクイズ',
         short_name: 'ポケクイズ',
-        description: 'ポケモンの名前を当てるクイズアプリ',
-        theme_color: '#8EC5FC',
+        description: '最強のポケモンマスターを目指せ！',
+        theme_color: '#ff80bf',
+        background_color: '#ffffff',
+        display: 'standalone',
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: 'icon-192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'icon-512.png',
             sizes: '512x512',
             type: 'image/png'
           }
