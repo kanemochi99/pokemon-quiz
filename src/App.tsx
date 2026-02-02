@@ -247,15 +247,15 @@ function App() {
     setCurrentPokemon(nextPokemon);
     setChoices(nextChoices);
 
-    // Auto-play cry in cry mode
-    if (displayMode === 'cry' && nextPokemon?.cry) {
+    // Auto-play cry for all modes
+    if (nextPokemon?.cry) {
       setTimeout(() => {
         const audio = new Audio(nextPokemon.cry);
         audio.volume = 0.5;
         audio.play().catch(e => console.error('Auto-play failed', e));
       }, 500);
     }
-  }, [quizBuffer, selectedGen, selectedType, prefetchNextQuestion, displayMode]);
+  }, [quizBuffer, selectedGen, selectedType, prefetchNextQuestion]);
 
   const startGame = useCallback((mode: GameMode) => {
     setGameMode(mode);
@@ -704,7 +704,18 @@ function App() {
               <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
                 {currentPokemon.genus}
               </p>
-              <h1 style={{ fontSize: '2rem', marginBottom: '1rem', fontWeight: 800 }}>{currentPokemon.name}</h1>
+              <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', fontWeight: 800 }}>{currentPokemon.name}</h1>
+              
+              <div style={{ marginBottom: '1.5rem', position: 'relative', display: 'inline-block' }}>
+                <img 
+                  src={currentPokemon.isShiny ? currentPokemon.shinyImage : currentPokemon.image} 
+                  alt={currentPokemon.name} 
+                  style={{ width: '180px', height: '180px', objectFit: 'contain' }} 
+                />
+                {currentPokemon.isShiny && (
+                  <div className="shiny-sparkle" style={{ position: 'absolute', top: '0', right: '0', fontSize: '1.5rem', animation: 'spin 2s linear infinite' }}>✨</div>
+                )}
+              </div>
               
               <div style={{ background: 'var(--bg-gray)', padding: '1rem', borderRadius: '12px', textAlign: 'left', marginBottom: '1.5rem' }}>
                 <p style={{ fontSize: '0.875rem', lineHeight: '1.6', color: 'var(--text-primary)' }}>
