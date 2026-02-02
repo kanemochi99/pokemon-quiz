@@ -254,6 +254,7 @@ function App() {
   );
 
   const [showToast, setShowToast] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
 
   const handleShare = async () => {
     const shareData = {
@@ -1022,6 +1023,58 @@ function App() {
                   style={{ background: 'var(--bg-gray)', color: 'var(--text-primary)', padding: '1rem' }}
                 >
                   おわる
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {showAbout && (
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(0,0,0,0.7)', borderRadius: '16px', zIndex: 200, backdropFilter: 'blur(4px)' }}>
+            <div className="glass-panel bounce-in" style={{ padding: '2rem', textAlign: 'left', background: 'var(--bg-panel)', width: '90%', maxWidth: '500px', maxHeight: '85%', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>❓ あそびかた</h2>
+                <button onClick={() => setShowAbout(false)} style={{ background: 'var(--bg-gray)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.875rem' }}>❌</button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <section>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>🎮 クイズの モード</h3>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                    <li><strong>🎯 えらぶ</strong>: 4つの なまえから せいかいを えらぼう！</li>
+                    <li><strong>⌨️ かく</strong>: キーボードで ポケモンの なまえを いれよう！</li>
+                    <li><strong>🔈 こえ</strong>: ポケモンの なきごえだけで なまえを あてよう！</li>
+                    <li><strong>🧪 タイプ</strong>: ポケモンの 「じゃくてん」を あてよう！</li>
+                  </div>
+                </section>
+
+                <section>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>📈 レベルと 称号</h3>
+                  <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                    せいかいするたびに けいけんちが たまるよ！<br />
+                    5もん せいかいするごとに <strong>レベルアップ！</strong><br />
+                    「ジムリーダー」や「チャンピオン」を めざしてがんばろう！
+                  </p>
+                </section>
+
+                <section>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>📱 アプリにする ほうほう (PWA)</h3>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', background: 'var(--bg-gray)', padding: '1rem', borderRadius: '12px' }}>
+                    <p style={{ fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>🍏 iPhone / iPad</p>
+                    <p style={{ marginBottom: '1rem' }}>Safariの「共有ボタン（四角と矢印）」を おして <strong>「ホーム画面に追加」</strong> をえらんでね！</p>
+                    
+                    <p style={{ fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>🤖 Android / Chrome</p>
+                    <p style={{ marginBottom: '1rem' }}>「︙」メニューから <strong>「アプリをインストール」</strong> をえらんでね！</p>
+
+                    <p style={{ fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>🔥 Fireタブレット</p>
+                    <p>Silkブラウザの メニューから <strong>「ホーム画面に追加」</strong> をえらんでね！</p>
+                  </div>
+                </section>
+
+                <button 
+                  onClick={() => setShowAbout(false)}
+                  style={{ width: '100%', padding: '1rem', background: 'var(--primary-color)', color: 'white', fontWeight: 700, fontSize: '1.1rem', marginTop: '1rem' }}
+                >
+                  わかった！
                 </button>
               </div>
             </div>
