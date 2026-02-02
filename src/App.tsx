@@ -24,6 +24,28 @@ const TYPE_NAME_MAP: Record<string, string> = {
   bug: 'むし', rock: 'いわ', ghost: 'ゴースト', dragon: 'ドラゴン', steel: 'はがね', dark: 'あく', fairy: 'フェアリー'
 };
 
+// Attacking type -> List of defending types it is strong against (2x)
+const TYPE_CHART: Record<string, string[]> = {
+  fire: ['grass', 'ice', 'bug', 'steel'],
+  water: ['fire', 'ground', 'rock'],
+  grass: ['water', 'ground', 'rock'],
+  electric: ['water', 'flying'],
+  ice: ['grass', 'ground', 'flying', 'dragon'],
+  fighting: ['normal', 'ice', 'rock', 'dark', 'steel'],
+  poison: ['grass', 'fairy'],
+  ground: ['fire', 'electric', 'poison', 'rock', 'steel'],
+  flying: ['grass', 'fighting', 'bug'],
+  psychic: ['fighting', 'poison'],
+  bug: ['grass', 'psychic', 'dark'],
+  rock: ['fire', 'ice', 'flying', 'bug'],
+  ghost: ['psychic', 'ghost'],
+  dragon: ['dragon'],
+  steel: ['ice', 'rock', 'fairy'],
+  dark: ['psychic', 'ghost'],
+  fairy: ['fighting', 'dragon', 'dark'],
+  normal: []
+};
+
 const THEMES: { id: ThemeType; color: string; label: string }[] = [
   { id: 'light', color: '#ffffff', label: 'しろ' },
   { id: 'dark', color: '#111827', label: 'くろ' },
@@ -85,8 +107,11 @@ const fetchPokemonData = async (id: number, forceShiny: boolean = false): Promis
 
   const jaName = speciesData.names.find((n: any) => n.language.name === 'ja')?.name || data.name;
   const jaGenus = speciesData.genera.find((g: any) => g.language.name === 'ja')?.genus || '';
-  const jaFlavorText = speciesData.flavor_text_entries
-    .find((f: any) => f.language.name === 'ja' || f.language.name === 'ja-Hrkt')?.flavor_text || '';
+  const jaFlavorTextEntry = speciesData.flavor_text_entries.find((f: any) => f.language.name === 'ja-Hrkt') || 
+                           speciesData.flavor_text_entries.find((f: any) => f.language.name === 'ja');
+  
+  const jaFlavorText = jaFlavorTextEntry ? jaFlavorTextEntry.flavor_text : 
+                        (speciesData.flavor_text_entries.find((f: any) => f.language.name === 'en')?.flavor_text || '');
   
   const jaTypes = data.types.map((t: any) => TYPE_NAME_MAP[t.type.name] || t.type.name);
   
@@ -105,7 +130,7 @@ const fetchPokemonData = async (id: number, forceShiny: boolean = false): Promis
   };
 };
 
-const fetchQuizData = async (gen: string = 'all', type: string = 'all') => {
+const fetchQuizData = async (gen: string = 'all', type: string = 'all', category: 'name' | 'type' = 'name') => {
   let min = 1, max = MAX_POKEMON_ID;
   if (gen !== 'all') {
     [min, max] = GEN_RANGES[gen] || GEN_RANGES['all'];
@@ -114,7 +139,6 @@ const fetchQuizData = async (gen: string = 'all', type: string = 'all') => {
   let possibleIds: number[] = [];
   
   if (type !== 'all') {
-    // Fetch IDs for the specific type
     const res = await fetch(`https://pokeapi.co/api/v2/type/${type}`);
     const data = await res.json();
     possibleIds = data.pokemon
@@ -133,6 +157,39 @@ const fetchQuizData = async (gen: string = 'all', type: string = 'all') => {
   };
 
   const correctPokemon = await fetchPokemonData(getRandomTargetId());
+
+  if (category === 'type') {
+    // Determine weaknesses
+    const weaknesses: string[] = [];
+    Object.entries(TYPE_CHART).forEach(([attacker, strongAgainst]) => {
+      // Check if this attacker is strong against any of the pokemon's types
+      const isStrong = correctPokemon.types?.some(typeJa => {
+        const defTypeEn = Object.entries(TYPE_NAME_MAP).find(([_, ja]) => ja === typeJa)?.[0];
+        return defTypeEn && strongAgainst.includes(defTypeEn);
+      });
+      if (isStrong) weaknesses.push(TYPE_NAME_MAP[attacker]);
+    });
+
+    if (weaknesses.length === 0) {
+      // Fallback if no weaknesses found (rare, eg Eelektross but we don't have abilities yet)
+      weaknesses.push('なし');
+    }
+
+    const correctAnswer = weaknesses[Math.floor(Math.random() * weaknesses.length)];
+    
+    const allTypesJa = Object.values(TYPE_NAME_MAP);
+    const wrongChoices: string[] = [];
+    while (wrongChoices.length < 3) {
+      const randomType = allTypesJa[Math.floor(Math.random() * allTypesJa.length)];
+      if (!weaknesses.includes(randomType) && !wrongChoices.includes(randomType)) {
+        wrongChoices.push(randomType);
+      }
+    }
+
+    const choices = [correctAnswer, ...wrongChoices].sort(() => Math.random() - 0.5);
+    return { correctPokemon, choices, correctAnswer };
+  }
+
   const wrongIds: number[] = [];
   while (wrongIds.length < 3) {
     const id = getRandomTargetId();
@@ -150,7 +207,7 @@ const fetchQuizData = async (gen: string = 'all', type: string = 'all') => {
   );
   
   const choices = [...wrongNames, correctPokemon.name].sort(() => Math.random() - 0.5);
-  return { correctPokemon, choices };
+  return { correctPokemon, choices, correctAnswer: correctPokemon.name };
 };
 
 function App() {
@@ -160,7 +217,9 @@ function App() {
   const [currentPokemon, setCurrentPokemon] = useState<Pokemon | null>(null);
   const [previewPokemon, setPreviewPokemon] = useState<Pokemon | null>(null);
   const [choices, setChoices] = useState<string[]>([]);
+  const [correctAnswer, setCorrectAnswer] = useState<string>('');
   const [score, setScore] = useState(0);
+  const [quizCategory, setQuizCategory] = useState<'name' | 'type'>('name');
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -208,12 +267,12 @@ function App() {
 
   const prefetchNextQuestion = useCallback(async () => {
     try {
-      const data = await fetchQuizData(selectedGen, selectedType);
+      const data = await fetchQuizData(selectedGen, selectedType, quizCategory);
       setQuizBuffer(data);
     } catch (error) {
       console.error('Prefetch failed', error);
     }
-  }, [selectedGen, selectedType]);
+  }, [selectedGen, selectedType, quizCategory]);
 
   const playCry = useCallback(() => {
     if (currentPokemon?.cry) {
@@ -229,19 +288,21 @@ function App() {
     setInputValue('');
     setHintLevel(0);
     
-    let nextPokemon, nextChoices;
+    let nextPokemon, nextChoices, nextCorrectAnswer;
 
     if (quizBuffer) {
       nextPokemon = quizBuffer.correctPokemon;
       nextChoices = quizBuffer.choices;
+      nextCorrectAnswer = quizBuffer.correctAnswer;
       setQuizBuffer(null);
       prefetchNextQuestion();
     } else {
       setIsLoading(true);
       try {
-        const data = await fetchQuizData(selectedGen, selectedType);
+        const data = await fetchQuizData(selectedGen, selectedType, quizCategory);
         nextPokemon = data.correctPokemon;
         nextChoices = data.choices;
+        nextCorrectAnswer = data.correctAnswer;
         prefetchNextQuestion();
       } catch (error) {
         console.error('Failed to load question', error);
@@ -253,6 +314,7 @@ function App() {
 
     setCurrentPokemon(nextPokemon);
     setChoices(nextChoices);
+    setCorrectAnswer(nextCorrectAnswer);
 
     // Auto-play cry for all modes
     if (nextPokemon?.cry) {
@@ -264,17 +326,22 @@ function App() {
     }
   }, [quizBuffer, selectedGen, selectedType, prefetchNextQuestion]);
 
-  const startGame = useCallback((mode: GameMode) => {
+  const startGame = useCallback((mode: GameMode, category: 'name' | 'type' = 'name') => {
     setGameMode(mode);
+    setQuizCategory(category);
     setScore(0);
     setTotalQuestions(0);
     setCurrentStreak(0);
-    loadQuestion();
+    // Note: loadQuestion uses state, so we need to be careful.
+    // However, setQuizCategory might not be applied until next render.
+    // It's safer to pass category directly to a helper or rely on state.
+    // For now, let's just make sure loadQuestion is called.
+    setTimeout(() => loadQuestion(), 0);
   }, [loadQuestion]);
 
   const checkAnswer = useCallback((answer: string) => {
     if (!currentPokemon) return;
-    const correct = currentPokemon.name === answer;
+    const correct = (correctAnswer || currentPokemon.name) === answer;
     setIsCorrect(correct);
     
     // Play cry on reveal if silhouette mode
@@ -497,68 +564,46 @@ function App() {
             </div>
           )}
 
-          <div style={{ marginBottom: '2rem', display: 'flex', gap: '2rem', justifyContent: 'center' }}>
-            <div>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 600 }}>もんだいの だしかた</p>
-              <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center', background: 'var(--bg-gray)', padding: '0.25rem', borderRadius: '8px' }}>
-                <button 
-                  onClick={() => setDisplayMode('illustration')} 
-                  style={{ 
-                    padding: '0.5rem 1rem', 
-                    fontSize: '0.875rem', 
-                    background: displayMode === 'illustration' ? 'var(--primary-color)' : 'transparent',
-                    color: displayMode === 'illustration' ? 'white' : 'var(--text-secondary)',
-                    boxShadow: 'none',
-                    borderRadius: '6px'
-                  }}
-                >
-                  え
-                </button>
-                <button 
-                  onClick={() => setDisplayMode('silhouette')} 
-                  style={{ 
-                    padding: '0.5rem 1rem', 
-                    fontSize: '0.875rem', 
-                    background: displayMode === 'silhouette' ? 'var(--primary-color)' : 'transparent',
-                    color: displayMode === 'silhouette' ? 'white' : 'var(--text-secondary)',
-                    boxShadow: 'none',
-                    borderRadius: '6px'
-                  }}
-                >
-                  かげ
-                </button>
-                <button 
-                  onClick={() => setDisplayMode('cry')} 
-                  style={{ 
-                    padding: '0.5rem 1rem', 
-                    fontSize: '0.875rem', 
-                    background: displayMode === 'cry' ? 'var(--primary-color)' : 'transparent',
-                    color: displayMode === 'cry' ? 'white' : 'var(--text-secondary)',
-                    boxShadow: 'none',
-                    borderRadius: '6px'
-                  }}
-                >
-                  こえ
-                </button>
-              </div>
+          <div style={{ marginBottom: '2rem' }}>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 600 }}>1. もんだいの だしかた</p>
+            <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center', background: 'var(--bg-gray)', padding: '0.25rem', borderRadius: '8px', maxWidth: '300px', margin: '0 auto' }}>
+              <button onClick={() => setDisplayMode('illustration')} style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', background: displayMode === 'illustration' ? 'var(--primary-color)' : 'transparent', color: displayMode === 'illustration' ? 'white' : 'var(--text-secondary)', borderRadius: '6px' }}>え</button>
+              <button onClick={() => setDisplayMode('silhouette')} style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', background: displayMode === 'silhouette' ? 'var(--primary-color)' : 'transparent', color: displayMode === 'silhouette' ? 'white' : 'var(--text-secondary)', borderRadius: '6px' }}>かげ</button>
+              <button onClick={() => setDisplayMode('cry')} style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', background: displayMode === 'cry' ? 'var(--primary-color)' : 'transparent', color: displayMode === 'cry' ? 'white' : 'var(--text-secondary)', borderRadius: '6px' }}>こえ</button>
             </div>
           </div>
           
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', width: '100%', maxWidth: '320px', margin: '0 auto 1.5rem' }}>
-            <button 
-              className="bounce-in"
-              onClick={() => startGame('choice')}
-              style={{ padding: '1.25rem', fontSize: '1.25rem', background: 'linear-gradient(135deg, #6e8efb, #a777e3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', flex: 1 }}
-            >
-              <span>🎯</span> えらぶ
-            </button>
-            <button 
-              className="bounce-in"
-              onClick={() => startGame('input')}
-              style={{ padding: '1.25rem', fontSize: '1.25rem', background: 'linear-gradient(135deg, #f093fb, #f5576c)', animationDelay: '0.1s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', flex: 1 }}
-            >
-              <span>⌨️</span> かく
-            </button>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem', width: '100%', maxWidth: '400px', margin: '0 auto 1.5rem' }}>
+            <div style={{ background: 'var(--bg-gray)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem', fontWeight: 600 }}>2. なまえを あてる</p>
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button 
+                  className="bounce-in"
+                  onClick={() => startGame('choice', 'name')}
+                  style={{ padding: '1rem', fontSize: '1.125rem', background: 'linear-gradient(135deg, #6e8efb, #a777e3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', flex: 1 }}
+                >
+                  <span>🎯</span> えらぶ
+                </button>
+                <button 
+                  className="bounce-in"
+                  onClick={() => startGame('input', 'name')}
+                  style={{ padding: '1rem', fontSize: '1.125rem', background: 'linear-gradient(135deg, #f093fb, #f5576c)', animationDelay: '0.1s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', flex: 1 }}
+                >
+                  <span>⌨️</span> かく
+                </button>
+              </div>
+            </div>
+
+            <div style={{ background: 'var(--bg-gray)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem', fontWeight: 600 }}>3. タイプを あてる (じゃくてん)</p>
+              <button 
+                className="bounce-in"
+                onClick={() => startGame('choice', 'type')}
+                style={{ padding: '1rem', fontSize: '1.125rem', background: 'linear-gradient(135deg, #4facfe, #00f2fe)', animationDelay: '0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', width: '100%' }}
+              >
+                <span>🧪</span> じゃくてんを えらぶ
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -639,7 +684,9 @@ function App() {
             )}
           </div>
           <h3 style={{ marginTop: '1rem', fontSize: '1.25rem', fontWeight: 600 }}>
-            {displayMode === 'cry' && !showResult ? 'この なきごえは だーれだ？' : (displayMode === 'silhouette' ? 'ポケモン だーれだ？' : 'このポケモンの名前は？')}
+            {quizCategory === 'type' ? 'このポケモンの「じゃくてん」はどれ？' : 
+             (displayMode === 'cry' && !showResult ? 'この なきごえは だーれだ？' : 
+              (displayMode === 'silhouette' ? 'ポケモン だーれだ？' : 'このポケモンの名前は？'))}
           </h3>
           
           {hintLevel > 0 && (
@@ -726,6 +773,13 @@ function App() {
               
               <div style={{ background: 'var(--bg-gray)', padding: '1rem', borderRadius: '12px', textAlign: 'left', marginBottom: '1.5rem' }}>
                 <p style={{ fontSize: '0.875rem', lineHeight: '1.6', color: 'var(--text-primary)' }}>
+                  {quizCategory === 'type' && (
+                    <div style={{ marginBottom: '1rem', padding: '0.75rem', background: 'var(--bg-panel)', borderRadius: '8px', borderLeft: '4px solid var(--primary-color)' }}>
+                      <span style={{ fontWeight: 800, color: 'var(--primary-color)' }}>{correctAnswer}</span> は 
+                      <span style={{ fontWeight: 800 }}> {currentPokemon.name}</span> ({currentPokemon.types?.join('・')}) 
+                      の じゃくてんだ！
+                    </div>
+                  )}
                   {currentPokemon.flavorText || 'せつめいがみつかりませんでした。'}
                 </p>
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
