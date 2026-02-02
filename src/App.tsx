@@ -245,6 +245,29 @@ function App() {
   const [maxStreak, setMaxStreak] = useState(() => Number(localStorage.getItem('maxStreak')) || 0);
   const [totalCorrectCount, setTotalCorrectCount] = useState(() => Number(localStorage.getItem('totalCorrectCount')) || 0);
 
+  // Time Attack states
+  const [timeLimit, setTimeLimit] = useState<number>(60);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [isTimeUp, setIsTimeUp] = useState(false);
+  const [timeAttackBestScores, setTimeAttackBestScores] = useState<Record<number, number>>(() => 
+    JSON.parse(localStorage.getItem('timeAttackBestScores') || '{"30": 0, "60": 0, "120": 0}')
+  );
+
+  // Timer Effect
+  React.useEffect(() => {
+    let timer: any;
+    if (timeLeft !== null && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft(prev => (prev !== null && prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    } else if (timeLeft === 0) {
+      setIsTimeUp(true);
+      setTimeLeft(null);
+      // Play time up sound or effect if needed
+    }
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+
   const getLevelInfo = (count: number) => {
     const level = Math.min(100, Math.floor(count / 5) + 1);
     const progress = count % 5;
@@ -346,21 +369,23 @@ function App() {
     }
   }, [quizBuffer, selectedGen, selectedType, prefetchNextQuestion]);
 
-  const startGame = useCallback((mode: GameMode, category: 'name' | 'type' = 'name') => {
+  const startGame = useCallback((mode: GameMode, category: 'name' | 'type' = 'name', isTimeAttack: boolean = false) => {
     setGameMode(mode);
     setQuizCategory(category);
     setScore(0);
     setTotalQuestions(0);
     setCurrentStreak(0);
-    // Note: loadQuestion uses state, so we need to be careful.
-    // However, setQuizCategory might not be applied until next render.
-    // It's safer to pass category directly to a helper or rely on state.
-    // For now, let's just make sure loadQuestion is called.
+    setIsTimeUp(false);
+    if (isTimeAttack) {
+      setTimeLeft(timeLimit);
+    } else {
+      setTimeLeft(null);
+    }
     setTimeout(() => loadQuestion(), 0);
-  }, [loadQuestion]);
+  }, [loadQuestion, timeLimit]);
 
   const checkAnswer = useCallback((answer: string) => {
-    if (!currentPokemon) return;
+    if (!currentPokemon || isTimeUp) return;
     const correct = (correctAnswer || currentPokemon.name) === answer;
     setIsCorrect(correct);
     
@@ -441,6 +466,8 @@ function App() {
 
   const resetGame = useCallback(() => {
     setGameMode(null);
+    setIsTimeUp(false);
+    setTimeLeft(null);
   }, []);
 
   const handleInputSubmit = (e: React.FormEvent) => {
@@ -658,14 +685,44 @@ function App() {
             </div>
 
             <div style={{ background: 'var(--bg-gray)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem', fontWeight: 600 }}>3. タイプを あてる (じゃくてん)</p>
-              <button 
-                className="bounce-in"
-                onClick={() => startGame('choice', 'type')}
-                style={{ padding: '1rem', fontSize: '1.125rem', background: 'linear-gradient(135deg, #4facfe, #00f2fe)', animationDelay: '0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', width: '100%' }}
-              >
-                <span>🧪</span> じゃくてんを えらぶ
-              </button>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem', fontWeight: 600 }}>4. タイムアタック (げんていモード)</p>
+              
+              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginBottom: '1.25rem', background: 'var(--bg-panel)', padding: '0.25rem', borderRadius: '8px' }}>
+                {[30, 60, 120].map(time => (
+                  <button 
+                    key={time} 
+                    onClick={() => setTimeLimit(time)} 
+                    style={{ 
+                      flex: 1, padding: '0.5rem', fontSize: '0.875rem', 
+                      background: timeLimit === time ? 'var(--primary-color)' : 'transparent',
+                      color: timeLimit === time ? 'white' : 'var(--text-secondary)',
+                      borderRadius: '6px', boxShadow: 'none'
+                    }}
+                  >
+                    {time}秒
+                  </button>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button 
+                  className="bounce-in"
+                  onClick={() => startGame('choice', 'name', true)}
+                  style={{ padding: '1rem', fontSize: '1.125rem', background: 'linear-gradient(135deg, #FFD700, #FFA500)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', flex: 1 }}
+                >
+                  <span>⚡</span> えらぶ
+                </button>
+                <button 
+                  className="bounce-in"
+                  onClick={() => startGame('input', 'name', true)}
+                  style={{ padding: '1rem', fontSize: '1.125rem', background: 'linear-gradient(135deg, #FF8C00, #FF4500)', animationDelay: '0.1s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', flex: 1 }}
+                >
+                  <span>🔥</span> かく
+                </button>
+              </div>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.75rem' }}>
+                さいこうきろく: {timeAttackBestScores[timeLimit] || 0}もん
+              </p>
             </div>
           </div>
         </div>
@@ -694,6 +751,22 @@ function App() {
           ← もどる
         </button>
         <div style={{ position: 'absolute', top: '1rem', right: '1rem', textAlign: 'right' }}>
+          {timeLeft !== null && (
+            <div style={{ 
+              fontSize: '1.5rem', 
+              fontWeight: 800, 
+              color: timeLeft <= 10 ? 'var(--error)' : 'var(--text-primary)',
+              background: 'var(--bg-gray)',
+              padding: '0.25rem 0.75rem',
+              borderRadius: '8px',
+              border: '2px solid',
+              borderColor: timeLeft <= 10 ? 'var(--error)' : 'var(--border-color)',
+              marginBottom: '0.5rem',
+              animation: timeLeft <= 10 ? 'pulse 1s infinite' : 'none'
+            }}>
+              ⏱️ {timeLeft}s
+            </div>
+          )}
           <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>てんすう: <strong style={{ color: 'var(--text-primary)' }}>{score}</strong></div>
           <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#f59e0b' }}>
             {currentStreak > 0 && '🔥'}
@@ -860,6 +933,58 @@ function App() {
               <button onClick={nextQuestion} style={{ background: 'var(--primary-color)', color: 'white', padding: '0.875rem 2.5rem', fontSize: '1.125rem', fontWeight: 600, width: '100%' }}>
                 つぎへ →
               </button>
+            </div>
+          </div>
+        )}
+        {isTimeUp && (
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(0,0,0,0.7)', borderRadius: '16px', zIndex: 100, backdropFilter: 'blur(4px)' }}>
+            <div className="glass-panel bounce-in" style={{ padding: '3rem 2rem', textAlign: 'center', background: 'var(--bg-panel)', width: '90%', maxWidth: '400px' }}>
+              <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>⏰</div>
+              <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>タイムアップ！</h2>
+              <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+                しゅうりょう！ あなたのスコアは...
+              </p>
+              
+              <div style={{ marginBottom: '2.5rem' }}>
+                <div style={{ fontSize: '4rem', fontWeight: 900, color: 'var(--primary-color)', lineHeight: '1' }}>{score}</div>
+                <div style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>もん せいかい！</div>
+              </div>
+
+              {score > (timeAttackBestScores[timeLimit] || 0) && (
+                <div style={{ marginBottom: '2rem', padding: '0.5rem', background: '#fef3c7', color: '#92400e', borderRadius: '8px', fontWeight: 700, animation: 'pulse 1s infinite' }}>
+                  🎊 しんきろく たっせい！ 🎊
+                </div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+                <button 
+                  onClick={() => {
+                    // Update best score if needed
+                    if (score > (timeAttackBestScores[timeLimit] || 0)) {
+                      const newBestScores = { ...timeAttackBestScores, [timeLimit]: score };
+                      setTimeAttackBestScores(newBestScores);
+                      localStorage.setItem('timeAttackBestScores', JSON.stringify(newBestScores));
+                    }
+                    startGame(gameMode || 'choice', quizCategory, true);
+                  }} 
+                  style={{ background: 'var(--primary-color)', color: 'white', padding: '1rem', fontSize: '1.25rem', fontWeight: 700 }}
+                >
+                  もういちど 挑戦
+                </button>
+                <button 
+                  onClick={() => {
+                    if (score > (timeAttackBestScores[timeLimit] || 0)) {
+                      const newBestScores = { ...timeAttackBestScores, [timeLimit]: score };
+                      setTimeAttackBestScores(newBestScores);
+                      localStorage.setItem('timeAttackBestScores', JSON.stringify(newBestScores));
+                    }
+                    resetGame();
+                  }} 
+                  style={{ background: 'var(--bg-gray)', color: 'var(--text-primary)', padding: '1rem' }}
+                >
+                  おわる
+                </button>
+              </div>
             </div>
           </div>
         )}
