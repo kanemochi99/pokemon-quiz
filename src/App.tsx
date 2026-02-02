@@ -66,15 +66,22 @@ const getRandomId = (min = 1, max = MAX_POKEMON_ID) =>
   Math.floor(Math.random() * (max - min + 1)) + min;
 
 const fetchPokemonData = async (id: number, forceShiny: boolean = false): Promise<Pokemon> => {
-  const [resPokemon, resSpecies] = await Promise.all([
-    fetch(`https://pokeapi.co/api/v2/pokemon/${id}`),
-    fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`)
-  ]);
+  const resSpecies = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`);
+  const speciesData = await resSpecies.json();
+
+  let pokemonUrl = `https://pokeapi.co/api/v2/pokemon/${id}`;
   
-  const [data, speciesData] = await Promise.all([
-    resPokemon.json(),
-    resSpecies.json()
-  ]);
+  // 15% chance to pick a special variety (Mega, Gmax, Regional) if available
+  if (speciesData.varieties && speciesData.varieties.length > 1 && Math.random() < 0.15) {
+    const specialVarieties = speciesData.varieties.filter((v: any) => !v.is_default);
+    if (specialVarieties.length > 0) {
+      const variety = specialVarieties[Math.floor(Math.random() * specialVarieties.length)];
+      pokemonUrl = variety.pokemon.url;
+    }
+  }
+
+  const resPokemon = await fetch(pokemonUrl);
+  const data = await resPokemon.json();
 
   const jaName = speciesData.names.find((n: any) => n.language.name === 'ja')?.name || data.name;
   const jaGenus = speciesData.genera.find((g: any) => g.language.name === 'ja')?.genus || '';
