@@ -253,6 +253,33 @@ function App() {
     JSON.parse(localStorage.getItem('timeAttackBestScores') || '{"30": 0, "60": 0, "120": 0}')
   );
 
+  const [showToast, setShowToast] = useState(false);
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'ポケモンクイズ',
+      text: '最強のポケモンマスターを目指せ！このポケモンクイズ、めちゃくちゃ楽しいよ！',
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error('Share failed', err);
+      }
+    } else {
+      // Fallback: Copy to clipboard
+      try {
+        await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 2000);
+      } catch (err) {
+        console.error('Clipboard failed', err);
+      }
+    }
+  };
+
   // Timer Effect
   React.useEffect(() => {
     let timer: any;
@@ -724,8 +751,20 @@ function App() {
                 さいこうきろく: {timeAttackBestScores[timeLimit] || 0}もん
               </p>
             </div>
+
+            <button 
+              onClick={handleShare}
+              style={{ padding: '0.75rem 1.5rem', fontSize: '0.875rem', background: 'var(--bg-panel)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '12px', fontWeight: 600, width: '100%', maxWidth: '300px', margin: '1rem auto 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+            >
+              <span>🎁</span> ともだちに おしえる
+            </button>
           </div>
         </div>
+        {showToast && (
+          <div className="fade-in" style={{ position: 'fixed', bottom: '2rem', left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.8)', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '30px', fontSize: '0.875rem', fontWeight: 600, zIndex: 1000, pointerEvents: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+            ✅ URLを コピーしたよ！
+          </div>
+        )}
       </div>
     );
   }
