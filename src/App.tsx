@@ -243,6 +243,26 @@ function App() {
   const [bestScore, setBestScore] = useState(() => Number(localStorage.getItem('bestScore')) || 0);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [maxStreak, setMaxStreak] = useState(() => Number(localStorage.getItem('maxStreak')) || 0);
+  const [totalCorrectCount, setTotalCorrectCount] = useState(() => Number(localStorage.getItem('totalCorrectCount')) || 0);
+
+  const getLevelInfo = (count: number) => {
+    const level = Math.min(100, Math.floor(count / 5) + 1);
+    const progress = count % 5;
+    const progressPercent = (progress / 5) * 100;
+    return { level, progress, progressPercent };
+  };
+
+  const getTrainerTitle = (level: number) => {
+    if (level >= 100) return '✨ ポケモンマスター ✨';
+    if (level >= 80) return '👑 マスター';
+    if (level >= 60) return '🔥 伝説のトレーナー';
+    if (level >= 50) return '🏆 チャンピオン';
+    if (level >= 40) return '⚔️ 四天王';
+    if (level >= 30) return '🎖️ ジムリーダー';
+    if (level >= 20) return '🌟 かんろくトレーナー';
+    if (level >= 10) return '🔰 ホープトレーナー';
+    return '🥚 ビギナー';
+  };
 
   // Apply theme to body
   React.useEffect(() => {
@@ -383,6 +403,24 @@ function App() {
         }, 200);
       }
       
+      const newTotal = totalCorrectCount + 1;
+      setTotalCorrectCount(newTotal);
+      localStorage.setItem('totalCorrectCount', String(newTotal));
+
+      // Level up celebration!
+      const oldLevel = getLevelInfo(totalCorrectCount).level;
+      const newLevel = getLevelInfo(newTotal).level;
+      if (newLevel > oldLevel) {
+        setTimeout(() => {
+          confetti({
+            particleCount: 200,
+            spread: 120,
+            origin: { y: 0.3 },
+            colors: ['#3b82f6', '#10b981', '#fbbf24']
+          });
+        }, 500);
+      }
+
       const newStreak = currentStreak + 1;
       setCurrentStreak(newStreak);
       if (newStreak > maxStreak) {
@@ -457,6 +495,31 @@ function App() {
           <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
             🎮 ポケモンクイズ
           </h1>
+
+          <div style={{ marginBottom: '1.5rem', background: 'var(--bg-gray)', padding: '1rem', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+              <div style={{ background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: 'white', padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.875rem', fontWeight: 800 }}>
+                Lv.{getLevelInfo(totalCorrectCount).level}
+              </div>
+              <div style={{ fontSize: '1.125rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                {getTrainerTitle(getLevelInfo(totalCorrectCount).level)}
+              </div>
+            </div>
+            <div style={{ width: '100%', maxWidth: '240px', height: '8px', background: 'var(--bg-panel)', borderRadius: '4px', margin: '0 auto 0.25rem', overflow: 'hidden' }}>
+              <div 
+                style={{ 
+                  width: `${getLevelInfo(totalCorrectCount).progressPercent}%`, 
+                  height: '100%', 
+                  background: 'linear-gradient(90deg, #6e8efb, #a777e3)',
+                  transition: 'width 0.3s ease'
+                }} 
+              />
+            </div>
+            <p style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+              つぎのレベルまで あと {5 - getLevelInfo(totalCorrectCount).progress}もん
+            </p>
+          </div>
+
           <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <div className="score-badge">
               🏆 さいこう: {bestScore}
