@@ -256,6 +256,102 @@ function App() {
   const [showToast, setShowToast] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
 
+  // Shiritori states
+  const [isShiritori, setIsShiritori] = useState(false);
+  const [shiritoriHistory, setShiritoriHistory] = useState<{ sender: 'player' | 'ai', name: string, image?: string }[]>([]);
+  const [usedPokemonNames, setUsedPokemonNames] = useState<Set<string>>(new Set());
+  const [allPokemonDatabase, setAllPokemonDatabase] = useState<{ name: string, id: number }[]>([]);
+  const [shiritoriInput, setShiritoriInput] = useState('');
+  const [isAiThinking, setIsAiThinking] = useState(false);
+  const [shiritoriWinner, setShiritoriWinner] = useState<'player' | 'ai' | null>(null);
+  const [shiritoriLoading, setShiritoriLoading] = useState(false);
+  const [shiritoriError, setShiritoriError] = useState('');
+
+  const startShiritori = async () => {
+    setIsShiritori(true);
+    setShiritoriHistory([]);
+    setUsedPokemonNames(new Set());
+    setShiritoriWinner(null);
+    setShiritoriError('');
+    await fetchAllPokemonNames();
+  };
+
+  const handleShiritoriSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const input = shiritoriInput.trim();
+    if (!input || isAiThinking || shiritoriWinner) return;
+
+    // Validate if it's a real pokemon
+    const pokemon = allPokemonDatabase.find(p => p.name === input);
+    if (!pokemon) {
+      setShiritoriError('それは ポケモンの なまえじゃ ないみたい...');
+      return;
+    }
+
+    // Check if used
+    if (usedPokemonNames.has(input)) {
+      setShiritoriError('その なまえは もう でたよ！');
+      return;
+    }
+
+    // Check link
+    if (shiritoriHistory.length > 0) {
+      const lastAiWord = shiritoriHistory[shiritoriHistory.length - 1].name;
+      const targetChar = normalizeLastChar(lastAiWord);
+      if (input[0] !== targetChar) {
+        setShiritoriError(`「${targetChar}」から はじまる なまえに してね！`);
+        return;
+      }
+    }
+
+    // Add to history
+    setShiritoriError('');
+    const newUsed = new Set(usedPokemonNames).add(input);
+    setUsedPokemonNames(newUsed);
+    setShiritoriHistory(prev => [...prev, { 
+      sender: 'player', 
+      name: input, 
+      image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png` 
+    }]);
+    setShiritoriInput('');
+
+    if (input.endsWith('ン')) {
+      setShiritoriWinner('ai');
+      return;
+    }
+
+    // AI Turn
+    setIsAiThinking(true);
+    setTimeout(() => {
+      const targetChar = normalizeLastChar(input);
+      const candidates = allPokemonDatabase.filter(p => 
+        p.name.startsWith(targetChar) && !newUsed.has(p.name)
+      );
+
+      if (candidates.length === 0) {
+        setShiritoriWinner('player');
+        setIsAiThinking(false);
+        return;
+      }
+
+      // Pro AI: Avoid names ending in 'ン' if possible
+      let aiChoice = candidates.find(p => !p.name.endsWith('ン'));
+      if (!aiChoice) aiChoice = candidates[Math.floor(Math.random() * candidates.length)];
+
+      setUsedPokemonNames(prev => new Set(prev).add(aiChoice!.name));
+      setShiritoriHistory(prev => [...prev, { 
+        sender: 'ai', 
+        name: aiChoice!.name, 
+        image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${aiChoice!.id}.png` 
+      }]);
+      
+      if (aiChoice!.name.endsWith('ン')) {
+        setShiritoriWinner('player');
+      }
+      setIsAiThinking(false);
+    }, 1500);
+  };
+
   const handleShare = async () => {
     const shareData = {
       title: 'ポケモンクイズ',
@@ -487,6 +583,56 @@ function App() {
     setTotalQuestions(totalQuestions + 1);
     setShowResult(true);
   }, [currentPokemon, score, bestScore, currentStreak, maxStreak, totalQuestions, playCry, displayMode]);
+
+  const normalizeLastChar = (name: string) => {
+    const smallToLarge: Record<string, string> = {
+      'ァ': 'ア', 'ィ': 'イ', 'ゥ': 'ウ', 'ェ': 'エ', 'ォ': 'オ',
+      'ッ': 'ツ', 'ャ': 'ヤ', 'ュ': 'ユ', 'ョ': 'ヨ', 'ヮ': 'ワ',
+    };
+    const last = name.slice(-1);
+    if (last === 'ー') {
+      const charBefore = name.slice(-2, -1);
+      const jaVowels: Record<string, string> = {
+        'ア': 'ア', 'カ': 'ア', 'サ': 'ア', 'タ': 'ア', 'ナ': 'ア', 'ハ': 'ア', 'マ': 'ア', 'ヤ': 'ア', 'ラ': 'ア', 'ワ': 'ア', 'ガ': 'ア', 'ザ': 'ア', 'ダ': 'ア', 'バ': 'ア', 'パ': 'ア',
+        'イ': 'イ', 'キ': 'イ', 'シ': 'イ', 'チ': 'イ', 'ニ': 'イ', 'ヒ': 'イ', 'ミ': 'イ', 'リ': 'イ', 'ギ': 'イ', 'ジ': 'イ', 'ヂ': 'イ', 'ビ': 'イ', 'ピ': 'イ',
+        'ウ': 'ウ', 'ク': 'ウ', 'ス': 'ウ', 'ツ': 'ウ', 'ヌ': 'ウ', 'フ': 'ウ', 'ム': 'ウ', 'ユ': 'ウ', 'ル': 'ウ', 'グ': 'ウ', 'ズ': 'ウ', 'ヅ': 'ウ', 'ブ': 'ウ', 'プ': 'ウ',
+        'エ': 'エ', 'ケ': 'エ', 'セ': 'エ', 'テ': 'エ', 'ネ': 'エ', 'ヘ': 'エ', 'メ': 'エ', 'レ': 'エ', 'ゲ': 'エ', 'ゼ': 'エ', 'デ': 'エ', 'ベ': 'エ', 'ペ': 'エ',
+        'オ': 'オ', 'コ': 'オ', 'ソ': 'オ', 'ト': 'オ', 'ノ': 'オ', 'ホ': 'オ', 'モ': 'オ', 'ヨ': 'オ', 'ロ': 'オ', 'ゴ': 'オ', 'ゾ': 'オ', 'ド': 'オ', 'ボ': 'オ', 'ポ': 'オ'
+      };
+      return jaVowels[charBefore] || charBefore;
+    }
+    return smallToLarge[last] || last;
+  };
+
+  const fetchAllPokemonNames = async () => {
+    if (shiritoriLoading || allPokemonDatabase.length > 0) return;
+    setShiritoriLoading(true);
+    try {
+      const database: { name: string, id: number }[] = [];
+      const batchSize = 100;
+      const total = 1025;
+      
+      for (let i = 1; i <= total; i += batchSize) {
+        const promises = [];
+        for (let j = i; j < i + batchSize && j <= total; j++) {
+          promises.push(
+            fetch(`https://pokeapi.co/api/v2/pokemon-species/${j}`)
+              .then(res => res.json())
+              .then(data => {
+                const jaName = data.names.find((n: any) => n.language.name === 'ja-Hrkt')?.name || 
+                               data.names.find((n: any) => n.language.name === 'ja')?.name;
+                if (jaName) database.push({ name: jaName, id: j });
+              })
+              .catch(e => console.error(`Failed to fetch species ${j}`, e))
+          );
+        }
+        await Promise.all(promises);
+      }
+      setAllPokemonDatabase(database);
+    } finally {
+      setShiritoriLoading(false);
+    }
+  };
 
   const nextQuestion = useCallback(() => {
     loadQuestion();
@@ -753,6 +899,17 @@ function App() {
               </p>
             </div>
 
+            <div style={{ background: 'var(--bg-gray)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem', fontWeight: 600 }}>5. しりとりバトル (AIと対戦！)</p>
+              <button 
+                className="bounce-in"
+                onClick={startShiritori}
+                style={{ width: '100%', padding: '1rem', fontSize: '1.125rem', background: 'linear-gradient(135deg, #FF69B4, #DA70D6)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+              >
+                <span>🔄</span> しりとりを はじめる
+              </button>
+            </div>
+
             <button 
               onClick={handleShare}
               style={{ padding: '0.75rem 1.5rem', fontSize: '0.875rem', background: 'var(--bg-panel)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '12px', fontWeight: 600, width: '100%', maxWidth: '300px', margin: '1rem auto 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
@@ -766,6 +923,114 @@ function App() {
             ✅ URLを コピーしたよ！
           </div>
         )}
+      </div>
+    );
+  }
+
+  // Shiritori Screen
+  if (isShiritori) {
+    return (
+      <div className="app-container">
+        <div className="glass-panel" style={{ padding: '1.5rem', width: '100%', maxWidth: '500px', display: 'flex', flexDirection: 'column', height: '90vh', position: 'relative' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <button onClick={() => setIsShiritori(false)} style={{ padding: '0.4rem 0.8rem', background: 'var(--bg-gray)', fontSize: '0.8rem', borderRadius: '8px', boxShadow: 'none' }}>
+              ← もどる
+            </button>
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 800 }}>🔄 しりとりバトル</h2>
+            <div style={{ width: '60px' }}></div>
+          </div>
+
+          {shiritoriLoading ? (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '1rem' }}>
+              <div className="pulse" style={{ fontSize: '3rem' }}>🔍</div>
+              <p style={{ fontWeight: 700, textAlign: 'center' }}>ポケモンの なまえを<br />おぼえています...</p>
+              <div style={{ width: '200px', height: '8px', background: 'var(--bg-gray)', borderRadius: '4px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', background: 'linear-gradient(90deg, var(--primary-color), #DA70D6)', width: `${Math.min(100, (allPokemonDatabase.length / 1025) * 100)}%`, transition: 'width 0.3s' }}></div>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{allPokemonDatabase.length} / 1025</p>
+            </div>
+          ) : (
+            <>
+              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', padding: '0.5rem', marginBottom: '1rem' }}>
+                {shiritoriHistory.length === 0 && (
+                  <div style={{ textAlign: 'center', marginTop: '2rem', color: 'var(--text-secondary)' }}>
+                    <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>🗣️</div>
+                    <p style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>しりとりを はじめよう！</p>
+                    <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>しっている ポケモンの なまえを<br />したの フォームに いれてね。</p>
+                  </div>
+                )}
+                {shiritoriHistory.map((chat, i) => (
+                  <div key={i} className="fade-in" style={{ display: 'flex', justifyContent: chat.sender === 'player' ? 'flex-end' : 'flex-start', alignItems: 'center', gap: '0.5rem' }}>
+                    {chat.sender === 'ai' && (
+                      <div style={{ width: '40px', height: '40px', background: 'white', borderRadius: '50%', border: '1px solid var(--border-color)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <img src={chat.image} alt="" style={{ width: '90%', height: '90%', objectFit: 'contain' }} />
+                      </div>
+                    )}
+                    <div style={{ 
+                      maxWidth: '75%', 
+                      padding: '0.75rem 1rem', 
+                      borderRadius: '18px', 
+                      background: chat.sender === 'player' ? 'var(--primary-color)' : 'white',
+                      color: chat.sender === 'player' ? 'white' : 'var(--text-primary)',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                      border: chat.sender === 'ai' ? '1px solid var(--border-color)' : 'none',
+                      fontWeight: 700,
+                      fontSize: '1rem'
+                    }}>
+                      {chat.name}
+                    </div>
+                    {chat.sender === 'player' && (
+                      <div style={{ width: '40px', height: '40px', background: 'white', borderRadius: '50%', border: '1px solid var(--border-color)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <img src={chat.image} alt="" style={{ width: '90%', height: '90%', objectFit: 'contain' }} />
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {isAiThinking && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '0.5rem' }}>
+                    <div className="glass-panel pulse" style={{ padding: '0.6rem 1.25rem', borderRadius: '18px', fontSize: '0.875rem', background: 'white', border: '1px solid var(--border-color)', fontWeight: 600 }}>
+                      カンガエチュウ...
+                    </div>
+                  </div>
+                )}
+                <div id="shiritori-bottom" style={{ height: '20px' }}></div>
+              </div>
+
+              {shiritoriWinner ? (
+                <div className="fade-in" style={{ background: 'var(--bg-gray)', padding: '1.5rem', borderRadius: '16px', textAlign: 'center', marginBottom: '1rem', border: '2px solid var(--border-color)' }}>
+                  <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>{shiritoriWinner === 'player' ? '🏆' : '💦'}</div>
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>
+                    {shiritoriWinner === 'player' ? 'きみの かち！' : 'AIの かち！'}
+                  </h2>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
+                    {shiritoriWinner === 'player' ? 'AIは もう なまえが おもいつかないみたい！' : '「ン」がついちゃったね。'}
+                  </p>
+                  <button onClick={startShiritori} style={{ width: '100%', padding: '1rem', background: 'var(--primary-color)', color: 'white', fontWeight: 800, borderRadius: '12px', fontSize: '1.1rem' }}>
+                    もういっかい！
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleShiritoriSubmit} style={{ display: 'flex', gap: '0.5rem', position: 'relative' }}>
+                  {shiritoriError && (
+                    <div className="bounce-in" style={{ position: 'absolute', top: '-3rem', left: 0, right: 0, background: '#fee2e2', color: '#dc2626', padding: '0.5rem', borderRadius: '10px', fontSize: '0.8rem', fontWeight: 800, textAlign: 'center', border: '2px solid #fecaca', zIndex: 50 }}>
+                      ⚠️ {shiritoriError}
+                    </div>
+                  )}
+                  <input 
+                    type="text" 
+                    value={shiritoriInput}
+                    onChange={(e) => setShiritoriInput(e.target.value)}
+                    placeholder="なまえを いれてね"
+                    style={{ flex: 1, padding: '1rem', borderRadius: '14px', border: '2px solid var(--border-color)', fontSize: '1rem', outline: 'none', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)' }}
+                  />
+                  <button type="submit" disabled={!shiritoriInput.trim() || isAiThinking} style={{ padding: '0 1.5rem', background: 'var(--primary-color)', color: 'white', borderRadius: '14px', fontWeight: 800, fontSize: '1rem' }}>
+                    OK
+                  </button>
+                </form>
+              )}
+            </>
+          )}
+        </div>
       </div>
     );
   }
