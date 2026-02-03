@@ -231,7 +231,6 @@ function App() {
   const [caughtPokemon, setCaughtPokemon] = useState<number[]>(() => 
     JSON.parse(localStorage.getItem('caughtPokemon') || '[]')
   );
-  const [showCollection, setShowCollection] = useState(false);
   
   // Filters and Performance
   const [selectedGen, setSelectedGen] = useState('all');
@@ -255,6 +254,7 @@ function App() {
 
   const [showToast, setShowToast] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  const [activeTab, setActiveTab] = useState<'home' | 'speed' | 'book' | 'settings'>('home');
 
   // Shiritori states
   const [isShiritori, setIsShiritori] = useState(false);
@@ -355,7 +355,7 @@ function App() {
   const handleShare = async () => {
     const shareData = {
       title: 'ポケモンクイズ',
-      text: '最強のポケモンマスターを目指せ！このポケモンクイズ、めちゃくちゃ楽しいよ！',
+      text: 'さいきょうの ポケモンマスターを めざせ！この ポケモンクイズ、めちゃくちゃ たのしいよ！',
       url: window.location.href,
     };
 
@@ -366,7 +366,6 @@ function App() {
         console.error('Share failed', err);
       }
     } else {
-      // Fallback: Copy to clipboard
       try {
         await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`);
         setShowToast(true);
@@ -376,21 +375,6 @@ function App() {
       }
     }
   };
-
-  // Timer Effect
-  React.useEffect(() => {
-    let timer: any;
-    if (timeLeft !== null && timeLeft > 0) {
-      timer = setInterval(() => {
-        setTimeLeft(prev => (prev !== null && prev > 0 ? prev - 1 : 0));
-      }, 1000);
-    } else if (timeLeft === 0) {
-      setIsTimeUp(true);
-      setTimeLeft(null);
-      // Play time up sound or effect if needed
-    }
-    return () => clearInterval(timer);
-  }, [timeLeft]);
 
   const getLevelInfo = (count: number) => {
     const level = Math.min(100, Math.floor(count / 5) + 1);
@@ -410,6 +394,229 @@ function App() {
     if (level >= 10) return '🔰 ホープトレーナー';
     return '🥚 ビギナー';
   };
+
+  const renderHeader = (title: string, subtitle?: string) => (
+    <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+        <h1 style={{ fontSize: '1.75rem', fontWeight: 800 }}>{title}</h1>
+        <button 
+          onClick={() => setShowAbout(true)} 
+          style={{ background: 'var(--bg-gray)', color: 'var(--text-secondary)', padding: 0, fontSize: '0.75rem', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'none' }}
+          title="あそびかた"
+        >
+          ❓
+        </button>
+      </div>
+      {subtitle && <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{subtitle}</p>}
+    </div>
+  );
+
+  const renderHomeTab = () => (
+    <div className="fade-in">
+      {previewPokemon && (
+        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+          <img src={previewPokemon.image} alt="" style={{ width: '120px', height: '120px', objectFit: 'contain', opacity: 0.8 }} />
+        </div>
+      )}
+      {renderHeader('🎮 ポケモンクイズ')}
+      
+      <div className="mode-card" style={{ background: 'var(--bg-gray)', padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: 'white', padding: '0.5rem', borderRadius: '12px', minWidth: '60px', textAlign: 'center', fontWeight: 800 }}>
+          <div style={{ fontSize: '0.6rem', opacity: 0.9 }}>Lv.</div>
+          <div style={{ fontSize: '1.25rem' }}>{getLevelInfo(totalCorrectCount).level}</div>
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '0.25rem' }}>{getTrainerTitle(getLevelInfo(totalCorrectCount).level)}</div>
+          <div style={{ width: '100%', height: '6px', background: 'var(--bg-panel)', borderRadius: '3px', overflow: 'hidden' }}>
+            <div style={{ width: `${getLevelInfo(totalCorrectCount).progressPercent}%`, height: '100%', background: 'var(--primary-color)', transition: 'width 0.3s' }} />
+          </div>
+        </div>
+      </div>
+
+      <div style={{ marginBottom: '1.5rem' }}>
+        <p style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '0.5rem', textAlign: 'center' }}>もんだいの だしかた</p>
+        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', background: 'var(--bg-gray)', padding: '0.4rem', borderRadius: '14px' }}>
+           {['illustration', 'silhouette', 'cry'].map(mode => (
+             <button 
+               key={mode}
+               onClick={() => setDisplayMode(mode as any)}
+               style={{ 
+                 flex: 1, padding: '0.6rem', borderRadius: '10px', fontSize: '0.875rem',
+                 background: displayMode === mode ? 'var(--primary-color)' : 'transparent',
+                 color: displayMode === mode ? 'white' : 'var(--text-secondary)',
+                 boxShadow: 'none'
+               }}
+             >
+               {mode === 'illustration' ? '📸 え' : mode === 'silhouette' ? '👤 かげ' : '🔊 こえ'}
+             </button>
+           ))}
+        </div>
+      </div>
+
+      <div className="mode-card" style={{ background: 'linear-gradient(135deg, #6e8efb, #a777e3)', border: 'none', color: 'white' }}>
+        <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: 'white' }}>🎯 クイズに ちょうせん</h3>
+        <p style={{ fontSize: '0.875rem', opacity: 0.9, marginBottom: '1rem' }}>せいかいして ポケモンを つかまえよう！</p>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button onClick={() => startGame('choice')} style={{ flex: 1, background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', color: 'white' }}>
+            えらぶ
+          </button>
+          <button onClick={() => startGame('input')} style={{ flex: 1, background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', color: 'white' }}>
+            かく
+          </button>
+        </div>
+      </div>
+
+      <div className="mode-card" style={{ background: 'linear-gradient(135deg, #f093fb, #f5576c)', border: 'none', color: 'white' }}>
+        <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: 'white' }}>🔄 しりとりバトル</h3>
+        <p style={{ fontSize: '0.875rem', opacity: 0.9, marginBottom: '1rem' }}>AIと しりとりで たたかおう！</p>
+        <button onClick={startShiritori} style={{ width: '100%', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', color: 'white' }}>
+          バトルを はじめる
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderSpeedTab = () => (
+    <div className="fade-in">
+      {renderHeader('⚡ タイムアタック', '制限時間内に 何問 せいかいできるかな？')}
+      
+      <div style={{ background: 'var(--bg-gray)', padding: '1.25rem', borderRadius: '24px', marginBottom: '1.5rem', border: '2px solid var(--border-color)' }}>
+        <p style={{ fontSize: '0.875rem', fontWeight: 800, marginBottom: '0.75rem', textAlign: 'center' }}>じかんを えらぶ</p>
+        <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-panel)', padding: '0.3rem', borderRadius: '12px' }}>
+          {[30, 60, 120].map(time => (
+            <button 
+              key={time}
+              onClick={() => setTimeLimit(time)}
+              style={{ 
+                flex: 1, padding: '0.6rem', borderRadius: '10px', fontSize: '0.875rem',
+                background: timeLimit === time ? 'var(--primary-color)' : 'transparent',
+                color: timeLimit === time ? 'white' : 'var(--text-secondary)',
+                boxShadow: 'none'
+              }}
+            >
+              {time}秒
+            </button>
+          ))}
+        </div>
+        <div style={{ marginTop: '1rem', textAlign: 'center', fontSize: '1.125rem', fontWeight: 800, color: 'var(--primary-color)' }}>
+          🏆 さいこう: {timeAttackBestScores[timeLimit] || 0}
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+        <button 
+          onClick={() => startGame('choice', 'name', true)}
+          style={{ padding: '1.25rem', fontSize: '1.25rem', background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: 'white', borderRadius: '24px' }}
+        >
+          ⚡ えらんで チャレンジ
+        </button>
+        <button 
+          onClick={() => startGame('input', 'name', true)}
+          style={{ padding: '1.25rem', fontSize: '1.25rem', background: 'linear-gradient(135deg, #FF8C00, #FF4500)', color: 'white', borderRadius: '24px' }}
+        >
+          🔥 かいて チャレンジ
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderBookTab = () => (
+    <div className="fade-in">
+      {renderHeader('📖 ポケモンずかん', `${caughtPokemon.length} ぴき つかまえたよ！`)}
+      
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))', gap: '0.75rem', maxHeight: '60vh', overflowY: 'auto', padding: '0.5rem', background: 'var(--bg-gray)', borderRadius: '20px' }}>
+        {caughtPokemon.sort((a,b) => a-b).map(id => (
+          <div key={id} style={{ background: 'var(--bg-panel)', borderRadius: '16px', padding: '0.5rem', textAlign: 'center', border: '1px solid var(--border-color)' }}>
+            <img 
+              src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`} 
+              alt="" style={{ width: '100%', aspectRatio: '1', objectFit: 'contain' }} 
+            />
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginTop: '0.3rem', fontWeight: 800 }}>#{String(id).padStart(3, '0')}</div>
+          </div>
+        ))}
+        {caughtPokemon.length === 0 && (
+          <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-secondary)' }}>
+            まだ 1ぴきも つかまえていないよ。<br />クイズで つかまえよう！
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderSettingsTab = () => (
+    <div className="fade-in">
+      {renderHeader('⚙️ せってい')}
+      
+      <div className="mode-card">
+        <p style={{ fontSize: '0.875rem', fontWeight: 800, marginBottom: '0.75rem' }}>テーマ（いろ）</p>
+        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+          {THEMES.map((t) => (
+            <div 
+              key={t.id}
+              className={`theme-circle ${theme === t.id ? 'active' : ''}`}
+              style={{ backgroundColor: t.color, width: '32px', height: '32px', border: t.id === 'light' ? '1px solid #ddd' : 'none' }}
+              onClick={() => setTheme(t.id)}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="mode-card">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+           <p style={{ fontSize: '0.875rem', fontWeight: 800 }}>もんだいの フィルター</p>
+           <button onClick={() => setShowFilters(!showFilters)} style={{ fontSize: '0.75rem', background: 'none', color: 'var(--primary-color)', textDecoration: 'underline', padding: 0, boxShadow: 'none' }}>
+             {showFilters ? 'とじる' : 'ひらく'}
+           </button>
+        </div>
+        
+        {showFilters && (
+          <div className="fade-in">
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>ちほう</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.25rem', marginBottom: '1rem' }}>
+              {['all', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map(gen => (
+                <button key={gen} onClick={() => setSelectedGen(gen)} style={{ padding: '0.4rem 0', fontSize: '0.65rem', background: selectedGen === gen ? 'var(--primary-color)' : 'var(--bg-panel)', color: selectedGen === gen ? 'white' : 'var(--text-primary)', border: '1px solid var(--border-color)', boxShadow: 'none' }}>
+                  {REGION_NAME_MAP[gen]}
+                </button>
+              ))}
+            </div>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>タイプ</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.25rem' }}>
+              <button onClick={() => setSelectedType('all')} style={{ gridColumn: 'span 2', padding: '0.4rem 0', fontSize: '0.65rem', background: selectedType === 'all' ? 'var(--primary-color)' : 'var(--bg-panel)', color: selectedType === 'all' ? 'white' : 'var(--text-primary)', border: '1px solid var(--border-color)', boxShadow: 'none', borderRadius: '6px' }}>
+                すべて
+              </button>
+              {Object.entries(TYPE_NAME_MAP).map(([en, ja]) => (
+                <button key={en} onClick={() => setSelectedType(en)} style={{ padding: '0.4rem 0', fontSize: '0.6rem', background: selectedType === en ? 'var(--primary-color)' : 'var(--bg-panel)', color: selectedType === en ? 'white' : 'var(--text-primary)', border: '1px solid var(--border-color)', boxShadow: 'none', borderRadius: '6px', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+                  {ja}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <button 
+        onClick={handleShare}
+        style={{ width: '100%', padding: '1rem', borderRadius: '16px', background: 'var(--bg-panel)', border: '2px solid var(--border-color)', color: 'var(--text-primary)', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+      >
+        <span>🎁</span> ともだちに おしえる
+      </button>
+    </div>
+  );
+
+  // Timer Effect
+  React.useEffect(() => {
+    let timer: any;
+    if (timeLeft !== null && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft(prev => (prev !== null && prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    } else if (timeLeft === 0) {
+      setIsTimeUp(true);
+      setTimeLeft(null);
+      // Play time up sound or effect if needed
+    }
+    return () => clearInterval(timer);
+  }, [timeLeft]);
 
   // Apply theme to body
   React.useEffect(() => {
@@ -652,274 +859,38 @@ function App() {
   };
 
   // Start Screen
-  // Collection View
-  if (showCollection) {
+  // Start Screen / Navigation
+  if (!gameMode && !isShiritori) {
     return (
-      <div className="app-container">
-        <div className="glass-panel fade-in" style={{ padding: '2rem', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <h2 style={{ fontSize: '1.5rem' }}>📖 つかまえたポケモン ({caughtPokemon.length})</h2>
-            <button onClick={() => setShowCollection(false)} style={{ background: 'var(--bg-gray)', color: 'var(--text-secondary)' }}>とじる</button>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '1rem' }}>
-            {caughtPokemon.sort((a,b) => a-b).map(id => (
-              <div key={id} style={{ textAlign: 'center', background: 'var(--bg-gray)', borderRadius: '8px', padding: '0.5rem' }}>
-                <img 
-                  src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`} 
-                  alt="caught" 
-                  style={{ width: '60px', height: '60px', objectFit: 'contain' }} 
-                />
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>No.{id}</div>
-              </div>
-            ))}
-          </div>
-          {caughtPokemon.length === 0 && <p style={{ textAlign: 'center', marginTop: '2rem', color: 'var(--text-secondary)' }}>まだ1ぴきもつかまえていないよ...</p>}
+      <div className="app-container tab-content">
+        <div className="glass-panel" style={{ padding: '1.5rem', width: '100%', maxWidth: '500px' }}>
+          {activeTab === 'home' && renderHomeTab()}
+          {activeTab === 'speed' && renderSpeedTab()}
+          {activeTab === 'book' && renderBookTab()}
+          {activeTab === 'settings' && renderSettingsTab()}
         </div>
-      </div>
-    );
-  }
 
-  // Start Screen
-  if (!gameMode) {
-    return (
-      <div className="app-container">
-        <div className="glass-panel fade-in" style={{ padding: '2.5rem', textAlign: 'center', width: '100%' }}>
-          {previewPokemon && (
-            <div style={{ marginBottom: '1.5rem' }}>
-              <img 
-                src={previewPokemon.image} 
-                alt="Pokemon Preview" 
-                style={{ width: '150px', height: '150px', objectFit: 'contain', opacity: 0.8 }} 
-              />
-            </div>
-          )}
-          <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
-            🎮 ポケモンクイズ
-          </h1>
-
-          <div style={{ marginBottom: '1.5rem', background: 'var(--bg-gray)', padding: '1rem', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-              <div style={{ background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: 'white', padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.875rem', fontWeight: 800 }}>
-                Lv.{getLevelInfo(totalCorrectCount).level}
-              </div>
-              <div style={{ fontSize: '1.125rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                {getTrainerTitle(getLevelInfo(totalCorrectCount).level)}
-              </div>
-            </div>
-            <div style={{ width: '100%', maxWidth: '240px', height: '8px', background: 'var(--bg-panel)', borderRadius: '4px', margin: '0 auto 0.25rem', overflow: 'hidden' }}>
-              <div 
-                style={{ 
-                  width: `${getLevelInfo(totalCorrectCount).progressPercent}%`, 
-                  height: '100%', 
-                  background: 'linear-gradient(90deg, #6e8efb, #a777e3)',
-                  transition: 'width 0.3s ease'
-                }} 
-              />
-            </div>
-            <p style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
-              つぎのレベルまで あと {5 - getLevelInfo(totalCorrectCount).progress}もん
-            </p>
-          </div>
-
-          <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <div className="score-badge">
-              🏆 さいこう: {bestScore}
-            </div>
-            <div className="score-badge">
-              🔥 れんしょう: {maxStreak}
-            </div>
-            <button onClick={() => setShowCollection(true)} style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', background: 'var(--bg-gray)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 600 }}>
-              📖 ずかん: {caughtPokemon.length}
-            </button>
-          </div>
-          
-          <div style={{ marginBottom: '1.5rem' }}>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 600 }}>いろをえらぶ</p>
-            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
-              {THEMES.map((t) => (
-                <div 
-                  key={t.id}
-                  className={`theme-circle ${theme === t.id ? 'active' : ''}`}
-                  style={{ backgroundColor: t.color, border: t.id === 'light' ? '1px solid #e5e7eb' : 'none' }}
-                  onClick={() => setTheme(t.id)}
-                  title={t.label}
-                />
-              ))}
-            </div>
-          </div>
-
-          <button 
-            onClick={() => setShowFilters(!showFilters)}
-            style={{ 
-              display: 'block', 
-              margin: '0 auto 1.5rem', 
-              fontSize: '0.875rem', 
-              color: 'var(--text-secondary)',
-              background: 'none',
-              border: 'none',
-              textDecoration: 'underline',
-              cursor: 'pointer'
-            }}
-          >
-            {showFilters ? '▲ せっていを とじる' : '⚙️ くわしい せってい'}
+        <div className="tab-bar">
+          <button className={`tab-item ${activeTab === 'home' ? 'active' : ''}`} onClick={() => setActiveTab('home')}>
+            <span className="tab-icon">🏠</span>
+            <span>ホーム</span>
           </button>
-
-          {showFilters && (
-            <div className="fade-in" style={{ marginBottom: '1.5rem', background: 'var(--bg-gray)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-              <div style={{ marginBottom: '1.25rem' }}>
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 600 }}>どのちほうをだす？</p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.4rem', justifyContent: 'center' }}>
-                  {['all', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map(gen => (
-                    <button 
-                      key={gen} 
-                      onClick={() => setSelectedGen(gen)}
-                      style={{ 
-                        padding: '0.4rem 0.2rem', 
-                        fontSize: '0.7rem', 
-                        background: selectedGen === gen ? 'var(--primary-color)' : 'white',
-                        color: selectedGen === gen ? 'white' : 'var(--text-primary)',
-                        boxShadow: 'none',
-                        borderRadius: '6px',
-                        border: '1px solid var(--border-color)'
-                      }}
-                    >
-                      {REGION_NAME_MAP[gen]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 600 }}>どのタイプをだす？</p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.3rem', justifyContent: 'center' }}>
-                  <button 
-                    onClick={() => setSelectedType('all')}
-                    style={{ 
-                      gridColumn: 'span 2',
-                      padding: '0.4rem 0.2rem', fontSize: '0.7rem', 
-                      background: selectedType === 'all' ? 'var(--primary-color)' : 'white',
-                      color: selectedType === 'all' ? 'white' : 'var(--text-primary)',
-                      boxShadow: 'none', borderRadius: '6px', border: '1px solid var(--border-color)'
-                    }}
-                  >
-                    すべて
-                  </button>
-                  {Object.entries(TYPE_NAME_MAP).map(([en, ja]) => (
-                    <button 
-                      key={en} 
-                      onClick={() => setSelectedType(en)}
-                      style={{ 
-                        padding: '0.4rem 0.1rem', 
-                        fontSize: '0.65rem', 
-                        background: selectedType === en ? 'var(--primary-color)' : 'white',
-                        color: selectedType === en ? 'white' : 'var(--text-primary)',
-                        boxShadow: 'none',
-                        borderRadius: '6px',
-                        border: '1px solid var(--border-color)',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden'
-                      }}
-                    >
-                      {ja}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div style={{ marginBottom: '2rem' }}>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 600 }}>1. もんだいの だしかた</p>
-            <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center', background: 'var(--bg-gray)', padding: '0.25rem', borderRadius: '8px', maxWidth: '300px', margin: '0 auto' }}>
-              <button onClick={() => setDisplayMode('illustration')} style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', background: displayMode === 'illustration' ? 'var(--primary-color)' : 'transparent', color: displayMode === 'illustration' ? 'white' : 'var(--text-secondary)', borderRadius: '6px' }}>え</button>
-              <button onClick={() => setDisplayMode('silhouette')} style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', background: displayMode === 'silhouette' ? 'var(--primary-color)' : 'transparent', color: displayMode === 'silhouette' ? 'white' : 'var(--text-secondary)', borderRadius: '6px' }}>かげ</button>
-              <button onClick={() => setDisplayMode('cry')} style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', background: displayMode === 'cry' ? 'var(--primary-color)' : 'transparent', color: displayMode === 'cry' ? 'white' : 'var(--text-secondary)', borderRadius: '6px' }}>こえ</button>
-            </div>
-          </div>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem', width: '100%', maxWidth: '400px', margin: '0 auto 1.5rem' }}>
-            <div style={{ background: 'var(--bg-gray)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem', fontWeight: 600 }}>2. なまえを あてる</p>
-              <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <button 
-                  className="bounce-in"
-                  onClick={() => startGame('choice', 'name')}
-                  style={{ padding: '1rem', fontSize: '1.125rem', background: 'linear-gradient(135deg, #6e8efb, #a777e3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', flex: 1 }}
-                >
-                  <span>🎯</span> えらぶ
-                </button>
-                <button 
-                  className="bounce-in"
-                  onClick={() => startGame('input', 'name')}
-                  style={{ padding: '1rem', fontSize: '1.125rem', background: 'linear-gradient(135deg, #f093fb, #f5576c)', animationDelay: '0.1s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', flex: 1 }}
-                >
-                  <span>⌨️</span> かく
-                </button>
-              </div>
-            </div>
-
-            <div style={{ background: 'var(--bg-gray)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem', fontWeight: 600 }}>4. タイムアタック (げんていモード)</p>
-              
-              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginBottom: '1.25rem', background: 'var(--bg-panel)', padding: '0.25rem', borderRadius: '8px' }}>
-                {[30, 60, 120].map(time => (
-                  <button 
-                    key={time} 
-                    onClick={() => setTimeLimit(time)} 
-                    style={{ 
-                      flex: 1, padding: '0.5rem', fontSize: '0.875rem', 
-                      background: timeLimit === time ? 'var(--primary-color)' : 'transparent',
-                      color: timeLimit === time ? 'white' : 'var(--text-secondary)',
-                      borderRadius: '6px', boxShadow: 'none'
-                    }}
-                  >
-                    {time}秒
-                  </button>
-                ))}
-              </div>
-
-              <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <button 
-                  className="bounce-in"
-                  onClick={() => startGame('choice', 'name', true)}
-                  style={{ padding: '1rem', fontSize: '1.125rem', background: 'linear-gradient(135deg, #FFD700, #FFA500)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', flex: 1 }}
-                >
-                  <span>⚡</span> えらぶ
-                </button>
-                <button 
-                  className="bounce-in"
-                  onClick={() => startGame('input', 'name', true)}
-                  style={{ padding: '1rem', fontSize: '1.125rem', background: 'linear-gradient(135deg, #FF8C00, #FF4500)', animationDelay: '0.1s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', flex: 1 }}
-                >
-                  <span>🔥</span> かく
-                </button>
-              </div>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.75rem' }}>
-                さいこうきろく: {timeAttackBestScores[timeLimit] || 0}もん
-              </p>
-            </div>
-
-            <div style={{ background: 'var(--bg-gray)', padding: '1.5rem', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem', fontWeight: 600 }}>5. しりとりバトル (AIと対戦！)</p>
-              <button 
-                className="bounce-in"
-                onClick={startShiritori}
-                style={{ width: '100%', padding: '1rem', fontSize: '1.125rem', background: 'linear-gradient(135deg, #FF69B4, #DA70D6)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-              >
-                <span>🔄</span> しりとりを はじめる
-              </button>
-            </div>
-
-            <button 
-              onClick={handleShare}
-              style={{ padding: '0.75rem 1.5rem', fontSize: '0.875rem', background: 'var(--bg-panel)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '12px', fontWeight: 600, width: '100%', maxWidth: '300px', margin: '1rem auto 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-            >
-              <span>🎁</span> ともだちに おしえる
-            </button>
-          </div>
+          <button className={`tab-item ${activeTab === 'speed' ? 'active' : ''}`} onClick={() => setActiveTab('speed')}>
+            <span className="tab-icon">⚡</span>
+            <span>タイム</span>
+          </button>
+          <button className={`tab-item ${activeTab === 'book' ? 'active' : ''}`} onClick={() => setActiveTab('book')}>
+            <span className="tab-icon">📖</span>
+            <span>ずかん</span>
+          </button>
+          <button className={`tab-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
+            <span className="tab-icon">⚙️</span>
+            <span>せってい</span>
+          </button>
         </div>
+
         {showToast && (
-          <div className="fade-in" style={{ position: 'fixed', bottom: '2rem', left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.8)', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '30px', fontSize: '0.875rem', fontWeight: 600, zIndex: 1000, pointerEvents: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
+          <div className="fade-in" style={{ position: 'fixed', bottom: '6rem', left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.8)', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '30px', fontSize: '0.875rem', fontWeight: 600, zIndex: 200, pointerEvents: 'none' }}>
             ✅ URLを コピーしたよ！
           </div>
         )}
@@ -956,7 +927,7 @@ function App() {
                   <div style={{ textAlign: 'center', marginTop: '2rem', color: 'var(--text-secondary)' }}>
                     <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>🗣️</div>
                     <p style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>しりとりを はじめよう！</p>
-                    <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>しっている ポケモンの なまえを<br />したの フォームに いれてね。</p>
+                    <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>しっている ポケモンの なまえを<br />したの はこに いれてね。</p>
                   </div>
                 )}
                 {shiritoriHistory.map((chat, i) => (
@@ -1247,7 +1218,7 @@ function App() {
               <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>⏰</div>
               <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>タイムアップ！</h2>
               <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-                しゅうりょう！ あなたのスコアは...
+                しゅうりょう！ きみの スコアは...
               </p>
               
               <div style={{ marginBottom: '2.5rem' }}>
@@ -1274,7 +1245,7 @@ function App() {
                   }} 
                   style={{ background: 'var(--primary-color)', color: 'white', padding: '1rem', fontSize: '1.25rem', fontWeight: 700 }}
                 >
-                  もういちど 挑戦
+                  もういちど ちょうせん
                 </button>
                 <button 
                   onClick={() => {
@@ -1318,7 +1289,7 @@ function App() {
                   <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
                     せいかいするたびに けいけんちが たまるよ！<br />
                     5もん せいかいするごとに <strong>レベルアップ！</strong><br />
-                    「ジムリーダー」や「チャンピオン」を めざしてがんばろう！
+                    「ジムリーダー」や 「チャンピオン」を めざして がんばろう！
                   </p>
                 </section>
 
