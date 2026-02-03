@@ -273,13 +273,36 @@ function App() {
     setUsedPokemonNames(new Set());
     setShiritoriWinner(null);
     setShiritoriError('');
-    await fetchAllPokemonNames();
+    setIsAiThinking(true);
+    
+    // Ensure database is loaded
+    if (allPokemonDatabase.length === 0) {
+      await fetchAllPokemonNames();
+    }
+    
+    // AI's first move
+    setTimeout(() => {
+      // Find a pool of common/cool pokemon for the start (optional, but good)
+      const candidates = allPokemonDatabase.filter(p => !p.name.endsWith('ン'));
+      const aiChoice = candidates[Math.floor(Math.random() * candidates.length)];
+      
+      if (aiChoice) {
+        setUsedPokemonNames(new Set([aiChoice.name]));
+        setShiritoriHistory([{ 
+          sender: 'ai', 
+          name: aiChoice.name, 
+          image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${aiChoice.id}.png` 
+        }]);
+      }
+      setIsAiThinking(false);
+    }, 1000);
   };
 
   const handleShiritoriSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const input = shiritoriInput.trim();
-    if (!input || isAiThinking || shiritoriWinner) return;
+    const rawInput = shiritoriInput.trim();
+    if (!rawInput || isAiThinking || shiritoriWinner) return;
+    const input = toKatakana(rawInput);
 
     // Validate if it's a real pokemon
     const pokemon = allPokemonDatabase.find(p => p.name === input);
@@ -791,22 +814,18 @@ function App() {
     setShowResult(true);
   }, [currentPokemon, score, bestScore, currentStreak, maxStreak, totalQuestions, playCry, displayMode]);
 
+  const toKatakana = (str: string) => {
+    return str.replace(/[ぁ-ん]/g, (s) => String.fromCharCode(s.charCodeAt(0) + 0x60));
+  };
+
   const normalizeLastChar = (name: string) => {
     const smallToLarge: Record<string, string> = {
       'ァ': 'ア', 'ィ': 'イ', 'ゥ': 'ウ', 'ェ': 'エ', 'ォ': 'オ',
       'ッ': 'ツ', 'ャ': 'ヤ', 'ュ': 'ユ', 'ョ': 'ヨ', 'ヮ': 'ワ',
     };
-    const last = name.slice(-1);
-    if (last === 'ー') {
-      const charBefore = name.slice(-2, -1);
-      const jaVowels: Record<string, string> = {
-        'ア': 'ア', 'カ': 'ア', 'サ': 'ア', 'タ': 'ア', 'ナ': 'ア', 'ハ': 'ア', 'マ': 'ア', 'ヤ': 'ア', 'ラ': 'ア', 'ワ': 'ア', 'ガ': 'ア', 'ザ': 'ア', 'ダ': 'ア', 'バ': 'ア', 'パ': 'ア',
-        'イ': 'イ', 'キ': 'イ', 'シ': 'イ', 'チ': 'イ', 'ニ': 'イ', 'ヒ': 'イ', 'ミ': 'イ', 'リ': 'イ', 'ギ': 'イ', 'ジ': 'イ', 'ヂ': 'イ', 'ビ': 'イ', 'ピ': 'イ',
-        'ウ': 'ウ', 'ク': 'ウ', 'ス': 'ウ', 'ツ': 'ウ', 'ヌ': 'ウ', 'フ': 'ウ', 'ム': 'ウ', 'ユ': 'ウ', 'ル': 'ウ', 'グ': 'ウ', 'ズ': 'ウ', 'ヅ': 'ウ', 'ブ': 'ウ', 'プ': 'ウ',
-        'エ': 'エ', 'ケ': 'エ', 'セ': 'エ', 'テ': 'エ', 'ネ': 'エ', 'ヘ': 'エ', 'メ': 'エ', 'レ': 'エ', 'ゲ': 'エ', 'ゼ': 'エ', 'デ': 'エ', 'ベ': 'エ', 'ペ': 'エ',
-        'オ': 'オ', 'コ': 'オ', 'ソ': 'オ', 'ト': 'オ', 'ノ': 'オ', 'ホ': 'オ', 'モ': 'オ', 'ヨ': 'オ', 'ロ': 'オ', 'ゴ': 'オ', 'ゾ': 'オ', 'ド': 'オ', 'ボ': 'オ', 'ポ': 'オ'
-      };
-      return jaVowels[charBefore] || charBefore;
+    let last = name.slice(-1);
+    if (last === 'ー' && name.length > 1) {
+      last = name.slice(-2, -1);
     }
     return smallToLarge[last] || last;
   };
@@ -900,6 +919,9 @@ function App() {
 
   // Shiritori Screen
   if (isShiritori) {
+    const lastWord = shiritoriHistory.length > 0 ? shiritoriHistory[shiritoriHistory.length - 1].name : '';
+    const nextChar = lastWord ? normalizeLastChar(lastWord) : '';
+
     return (
       <div className="app-container">
         <div className="glass-panel" style={{ padding: '1.5rem', width: '100%', maxWidth: '500px', display: 'flex', flexDirection: 'column', height: '90vh', position: 'relative' }}>
@@ -981,23 +1003,30 @@ function App() {
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleShiritoriSubmit} style={{ display: 'flex', gap: '0.5rem', position: 'relative' }}>
-                  {shiritoriError && (
-                    <div className="bounce-in" style={{ position: 'absolute', top: '-3rem', left: 0, right: 0, background: '#fee2e2', color: '#dc2626', padding: '0.5rem', borderRadius: '10px', fontSize: '0.8rem', fontWeight: 800, textAlign: 'center', border: '2px solid #fecaca', zIndex: 50 }}>
-                      ⚠️ {shiritoriError}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {!isAiThinking && nextChar && (
+                    <div className="fade-in" style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--primary-color)', textAlign: 'center' }}>
+                      つぎは <span style={{ fontSize: '1.25rem', background: 'var(--primary-color)', color: 'white', padding: '0.1rem 0.5rem', borderRadius: '6px', margin: '0 0.2rem' }}>{nextChar}</span> から はじまる なまえを いれてね！
                     </div>
                   )}
-                  <input 
-                    type="text" 
-                    value={shiritoriInput}
-                    onChange={(e) => setShiritoriInput(e.target.value)}
-                    placeholder="なまえを いれてね"
-                    style={{ flex: 1, padding: '1rem', borderRadius: '14px', border: '2px solid var(--border-color)', fontSize: '1rem', outline: 'none', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)' }}
-                  />
-                  <button type="submit" disabled={!shiritoriInput.trim() || isAiThinking} style={{ padding: '0 1.5rem', background: 'var(--primary-color)', color: 'white', borderRadius: '14px', fontWeight: 800, fontSize: '1rem' }}>
-                    OK
-                  </button>
-                </form>
+                  <form onSubmit={handleShiritoriSubmit} style={{ display: 'flex', gap: '0.5rem', position: 'relative' }}>
+                    {shiritoriError && (
+                      <div className="bounce-in" style={{ position: 'absolute', top: '-3rem', left: 0, right: 0, background: '#fee2e2', color: '#dc2626', padding: '0.5rem', borderRadius: '10px', fontSize: '0.8rem', fontWeight: 800, textAlign: 'center', border: '2px solid #fecaca', zIndex: 50 }}>
+                        ⚠️ {shiritoriError}
+                      </div>
+                    )}
+                    <input 
+                      type="text" 
+                      value={shiritoriInput}
+                      onChange={(e) => setShiritoriInput(e.target.value)}
+                      placeholder={nextChar ? `「${nextChar}」からはじまるなまえ` : "なまえを いれてね"}
+                      style={{ flex: 1, padding: '1rem', borderRadius: '14px', border: '2px solid var(--border-color)', fontSize: '1rem', outline: 'none', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)' }}
+                    />
+                    <button type="submit" disabled={!shiritoriInput.trim() || isAiThinking} style={{ padding: '0 1.5rem', background: 'var(--primary-color)', color: 'white', borderRadius: '14px', fontWeight: 800, fontSize: '1rem' }}>
+                      OK
+                    </button>
+                  </form>
+                </div>
               )}
             </>
           )}
