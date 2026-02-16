@@ -1,0 +1,1 @@
+src/App.tsx(1385,1): error TS1005: '}' expected.

@@ -27,7 +27,11 @@ body {
   display: flex;
   place-items: center;
   min-width: 320px;
-  min-height: 100vh;
+  height: 100dvh; /* Use dynamic viewport height for mobile */
+  width: 100vw;
+  overflow: hidden; /* Prevent global scrolling */
+  background-color: var(--bg-app); /* Use variable for theme support */
+  transition: background-color 0.3s ease;
 }
 
 h1 {

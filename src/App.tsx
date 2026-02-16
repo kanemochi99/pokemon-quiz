@@ -434,23 +434,24 @@ function App() {
     </div>
   );
 
+  /* Refactored Home Tab */
   const renderHomeTab = () => (
     <div className="fade-in">
       {previewPokemon && (
         <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
-          <img src={previewPokemon.image} alt="" style={{ width: '120px', height: '120px', objectFit: 'contain', opacity: 0.8 }} />
+          <img src={previewPokemon.image} alt="" style={{ width: '120px', height: '120px', objectFit: 'contain', opacity: 0.8, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.1))' }} />
         </div>
       )}
       {renderHeader('🎮 ポケモンクイズ')}
       
-      <div className="mode-card" style={{ background: 'var(--bg-gray)', padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <div style={{ background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: 'white', padding: '0.5rem', borderRadius: '12px', minWidth: '60px', textAlign: 'center', fontWeight: 800 }}>
+      <div className="glass-panel" style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+        <div style={{ background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: 'white', padding: '0.5rem', borderRadius: '12px', minWidth: '60px', textAlign: 'center', fontWeight: 800, textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
           <div style={{ fontSize: '0.6rem', opacity: 0.9 }}>Lv.</div>
-          <div style={{ fontSize: '1.25rem' }}>{getLevelInfo(totalCorrectCount).level}</div>
+          <div style={{ fontSize: '1.25rem', lineHeight: 1 }}>{getLevelInfo(totalCorrectCount).level}</div>
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '0.25rem' }}>{getTrainerTitle(getLevelInfo(totalCorrectCount).level)}</div>
-          <div style={{ width: '100%', height: '6px', background: 'var(--bg-panel)', borderRadius: '3px', overflow: 'hidden' }}>
+          <div style={{ width: '100%', height: '8px', background: 'rgba(0,0,0,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
             <div style={{ width: `${getLevelInfo(totalCorrectCount).progressPercent}%`, height: '100%', background: 'var(--primary-color)', transition: 'width 0.3s' }} />
           </div>
         </div>
@@ -458,14 +459,15 @@ function App() {
 
       <div style={{ marginBottom: '1.5rem' }}>
         <p style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '0.5rem', textAlign: 'center' }}>もんだいの だしかた</p>
-        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', background: 'var(--bg-gray)', padding: '0.4rem', borderRadius: '14px' }}>
+        <div className="glass-panel" style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', padding: '0.4rem', borderRadius: '16px' }}>
            {['illustration', 'silhouette', 'cry'].map(mode => (
              <button 
                key={mode}
                onClick={() => setDisplayMode(mode as any)}
+               className={displayMode === mode ? 'btn-primary' : ''}
                style={{ 
-                 flex: 1, padding: '0.6rem', borderRadius: '10px', fontSize: '0.875rem',
-                 background: displayMode === mode ? 'var(--primary-color)' : 'transparent',
+                 flex: 1, padding: '0.6rem', borderRadius: '12px', fontSize: '0.875rem',
+                 background: displayMode === mode ? undefined : 'transparent',
                  color: displayMode === mode ? 'white' : 'var(--text-secondary)',
                  boxShadow: 'none'
                }}
@@ -476,43 +478,45 @@ function App() {
         </div>
       </div>
 
-      <div className="mode-card" style={{ background: 'linear-gradient(135deg, #6e8efb, #a777e3)', border: 'none', color: 'white' }}>
+      <div className="glass-panel" style={{ background: 'linear-gradient(135deg, #6e8efb, #a777e3)', border: 'none', color: 'white', marginBottom: '1rem', padding: '1.25rem' }}>
         <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: 'white' }}>🎯 クイズに ちょうせん</h3>
         <p style={{ fontSize: '0.875rem', opacity: 0.9, marginBottom: '1rem' }}>せいかいして ポケモンを つかまえよう！</p>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button onClick={() => startGame('choice')} style={{ flex: 1, background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', color: 'white' }}>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button onClick={() => startGame('choice')} style={{ flex: 1, background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.3)', color: 'white' }}>
             えらぶ
           </button>
-          <button onClick={() => startGame('input')} style={{ flex: 1, background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', color: 'white' }}>
+          <button onClick={() => startGame('input')} style={{ flex: 1, background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.3)', color: 'white' }}>
             かく
           </button>
         </div>
       </div>
 
-      <div className="mode-card" style={{ background: 'linear-gradient(135deg, #f093fb, #f5576c)', border: 'none', color: 'white' }}>
+      <div className="glass-panel" style={{ background: 'linear-gradient(135deg, #f093fb, #f5576c)', border: 'none', color: 'white', padding: '1.25rem' }}>
         <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: 'white' }}>🔄 しりとりバトル</h3>
         <p style={{ fontSize: '0.875rem', opacity: 0.9, marginBottom: '1rem' }}>AIと しりとりで たたかおう！</p>
-        <button onClick={startShiritori} style={{ width: '100%', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', color: 'white' }}>
+        <button onClick={startShiritori} style={{ width: '100%', background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.3)', color: 'white' }}>
           バトルを はじめる
         </button>
       </div>
     </div>
   );
 
+  /* Refactored Speed Tab */
   const renderSpeedTab = () => (
     <div className="fade-in">
       {renderHeader('⚡ タイムアタック', '制限時間内に 何問 せいかいできるかな？')}
       
-      <div style={{ background: 'var(--bg-gray)', padding: '1.25rem', borderRadius: '24px', marginBottom: '1.5rem', border: '2px solid var(--border-color)' }}>
+      <div className="glass-panel" style={{ padding: '1.25rem', marginBottom: '1.5rem' }}>
         <p style={{ fontSize: '0.875rem', fontWeight: 800, marginBottom: '0.75rem', textAlign: 'center' }}>じかんを えらぶ</p>
-        <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-panel)', padding: '0.3rem', borderRadius: '12px' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(0,0,0,0.03)', padding: '0.3rem', borderRadius: '12px' }}>
           {[30, 60, 120].map(time => (
             <button 
               key={time}
               onClick={() => setTimeLimit(time)}
+              className={timeLimit === time ? 'btn-primary' : ''}
               style={{ 
                 flex: 1, padding: '0.6rem', borderRadius: '10px', fontSize: '0.875rem',
-                background: timeLimit === time ? 'var(--primary-color)' : 'transparent',
+                background: timeLimit === time ? undefined : 'transparent',
                 color: timeLimit === time ? 'white' : 'var(--text-secondary)',
                 boxShadow: 'none'
               }}
@@ -529,13 +533,13 @@ function App() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
         <button 
           onClick={() => startGame('choice', 'name', true)}
-          style={{ padding: '1.25rem', fontSize: '1.25rem', background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: 'white', borderRadius: '24px' }}
+          style={{ padding: '1.25rem', fontSize: '1.25rem', background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: 'white', borderRadius: '24px', boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)' }}
         >
           ⚡ えらんで チャレンジ
         </button>
         <button 
           onClick={() => startGame('input', 'name', true)}
-          style={{ padding: '1.25rem', fontSize: '1.25rem', background: 'linear-gradient(135deg, #FF8C00, #FF4500)', color: 'white', borderRadius: '24px' }}
+          style={{ padding: '1.25rem', fontSize: '1.25rem', background: 'linear-gradient(135deg, #FF8C00, #FF4500)', color: 'white', borderRadius: '24px', boxShadow: '0 4px 15px rgba(255, 69, 0, 0.3)' }}
         >
           🔥 かいて チャレンジ
         </button>
@@ -543,25 +547,28 @@ function App() {
     </div>
   );
 
+  /* Refactored Book Tab with Scroll Area */
   const renderBookTab = () => (
-    <div className="fade-in">
+    <div className="fade-in" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {renderHeader('📖 ポケモンずかん', `${caughtPokemon.length} ぴき つかまえたよ！`)}
       
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))', gap: '0.75rem', maxHeight: '60vh', overflowY: 'auto', padding: '0.5rem', background: 'var(--bg-gray)', borderRadius: '20px' }}>
-        {caughtPokemon.sort((a,b) => a-b).map(id => (
-          <div key={id} style={{ background: 'var(--bg-panel)', borderRadius: '16px', padding: '0.5rem', textAlign: 'center', border: '1px solid var(--border-color)' }}>
-            <img 
-              src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`} 
-              alt="" style={{ width: '100%', aspectRatio: '1', objectFit: 'contain' }} 
-            />
-            <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', marginTop: '0.3rem', fontWeight: 800 }}>#{String(id).padStart(3, '0')}</div>
-          </div>
-        ))}
-        {caughtPokemon.length === 0 && (
-          <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-secondary)' }}>
-            まだ 1ぴきも つかまえていないよ。<br />クイズで つかまえよう！
-          </div>
-        )}
+      <div className="glass-panel scroll-area" style={{ padding: '0.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(75px, 1fr))', gap: '0.5rem', paddingBottom: '2rem' }}>
+          {caughtPokemon.sort((a,b) => a-b).map(id => (
+            <div key={id} style={{ background: 'rgba(255,255,255,0.5)', borderRadius: '12px', padding: '0.5rem', textAlign: 'center', border: '1px solid var(--border-color)' }}>
+              <img 
+                src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`} 
+                alt="" style={{ width: '100%', aspectRatio: '1', objectFit: 'contain' }} 
+              />
+              <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', marginTop: '0.2rem', fontWeight: 800 }}>#{String(id).padStart(3, '0')}</div>
+            </div>
+          ))}
+          {caughtPokemon.length === 0 && (
+            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-secondary)' }}>
+              まだ 1ぴきも つかまえていないよ。<br />クイズで つかまえよう！
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -570,45 +577,89 @@ function App() {
     <div className="fade-in">
       {renderHeader('⚙️ せってい')}
       
-      <div className="mode-card">
+      <div className="glass-panel" style={{ marginBottom: '1rem', padding: '1.25rem' }}>
         <p style={{ fontSize: '0.875rem', fontWeight: 800, marginBottom: '0.75rem' }}>テーマ（いろ）</p>
         <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
           {THEMES.map((t) => (
-            <div 
+            <button
               key={t.id}
               className={`theme-circle ${theme === t.id ? 'active' : ''}`}
-              style={{ backgroundColor: t.color, width: '32px', height: '32px', border: t.id === 'light' ? '1px solid #ddd' : 'none' }}
+              style={{ 
+                backgroundColor: t.color, 
+                width: '40px', height: '40px', 
+                borderRadius: '50%',
+                border: theme === t.id ? '3px solid var(--text-primary)' : (t.id === 'light' ? '1px solid #ddd' : 'none'),
+                boxShadow: theme === t.id ? '0 0 0 2px var(--bg-panel), 0 4px 8px rgba(0,0,0,0.2)' : 'none',
+                transition: 'transform 0.2s',
+                transform: theme === t.id ? 'scale(1.1)' : 'scale(1)'
+              }}
               onClick={() => setTheme(t.id)}
+              aria-label={t.label}
             />
           ))}
         </div>
       </div>
 
-      <div className="mode-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+      <div className="glass-panel" style={{ marginBottom: '1rem', padding: '1.25rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
            <p style={{ fontSize: '0.875rem', fontWeight: 800 }}>もんだいの フィルター</p>
-           <button onClick={() => setShowFilters(!showFilters)} style={{ fontSize: '0.75rem', background: 'none', color: 'var(--primary-color)', textDecoration: 'underline', padding: 0, boxShadow: 'none' }}>
+           <button onClick={() => setShowFilters(!showFilters)} className="btn-secondary" style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem' }}>
              {showFilters ? 'とじる' : 'ひらく'}
            </button>
         </div>
         
         {showFilters && (
           <div className="fade-in">
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>ちほう</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.25rem', marginBottom: '1rem' }}>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', marginTop: '0.5rem' }}>ちほう</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.4rem', marginBottom: '1rem' }}>
               {['all', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map(gen => (
-                <button key={gen} onClick={() => setSelectedGen(gen)} style={{ padding: '0.4rem 0', fontSize: '0.65rem', background: selectedGen === gen ? 'var(--primary-color)' : 'var(--bg-panel)', color: selectedGen === gen ? 'white' : 'var(--text-primary)', border: '1px solid var(--border-color)', boxShadow: 'none' }}>
+                <button 
+                  key={gen} 
+                  onClick={() => setSelectedGen(gen)} 
+                  className={selectedGen === gen ? 'btn-primary' : ''}
+                  style={{ 
+                    padding: '0.4rem 0', fontSize: '0.7rem', 
+                    borderRadius: '8px',
+                    background: selectedGen === gen ? undefined : 'rgba(0,0,0,0.03)', 
+                    color: selectedGen === gen ? 'white' : 'var(--text-primary)', 
+                    border: selectedGen === gen ? 'none' : '1px solid var(--border-color)', 
+                    boxShadow: 'none' 
+                  }}
+                >
                   {REGION_NAME_MAP[gen]}
                 </button>
               ))}
             </div>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>タイプ</p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.25rem' }}>
-              <button onClick={() => setSelectedType('all')} style={{ gridColumn: 'span 2', padding: '0.4rem 0', fontSize: '0.65rem', background: selectedType === 'all' ? 'var(--primary-color)' : 'var(--bg-panel)', color: selectedType === 'all' ? 'white' : 'var(--text-primary)', border: '1px solid var(--border-color)', boxShadow: 'none', borderRadius: '6px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.4rem' }}>
+              <button 
+                onClick={() => setSelectedType('all')} 
+                className={selectedType === 'all' ? 'btn-primary' : ''}
+                style={{ 
+                  gridColumn: 'span 4', padding: '0.5rem 0', fontSize: '0.75rem', 
+                  borderRadius: '8px',
+                   background: selectedType === 'all' ? undefined : 'rgba(0,0,0,0.03)',
+                  color: selectedType === 'all' ? 'white' : 'var(--text-primary)', 
+                  border: selectedType === 'all' ? 'none' : '1px solid var(--border-color)', 
+                  marginBottom: '0.25rem'
+                }}
+              >
                 すべて
               </button>
               {Object.entries(TYPE_NAME_MAP).map(([en, ja]) => (
-                <button key={en} onClick={() => setSelectedType(en)} style={{ padding: '0.4rem 0', fontSize: '0.6rem', background: selectedType === en ? 'var(--primary-color)' : 'var(--bg-panel)', color: selectedType === en ? 'white' : 'var(--text-primary)', border: '1px solid var(--border-color)', boxShadow: 'none', borderRadius: '6px', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+                <button 
+                  key={en} 
+                  onClick={() => setSelectedType(en)} 
+                  className={selectedType === en ? 'btn-primary' : ''}
+                  style={{ 
+                    padding: '0.4rem 0', fontSize: '0.65rem', 
+                    borderRadius: '8px',
+                    background: selectedType === en ? undefined : 'rgba(0,0,0,0.03)', 
+                    color: selectedType === en ? 'white' : 'var(--text-primary)', 
+                    border: selectedType === en ? 'none' : '1px solid var(--border-color)', 
+                    whiteSpace: 'nowrap', overflow: 'hidden' 
+                  }}
+                >
                   {ja}
                 </button>
               ))}
@@ -619,7 +670,8 @@ function App() {
 
       <button 
         onClick={handleShare}
-        style={{ width: '100%', padding: '1rem', borderRadius: '16px', background: 'var(--bg-panel)', border: '2px solid var(--border-color)', color: 'var(--text-primary)', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+        className="btn-secondary"
+        style={{ width: '100%', padding: '1rem', borderRadius: '16px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
       >
         <span>🎁</span> ともだちに おしえる
       </button>
@@ -877,16 +929,17 @@ function App() {
     }
   };
 
-  // Start Screen
-  // Start Screen / Navigation
+  /* Refactored Menu Render */
   if (!gameMode && !isShiritori) {
     return (
-      <div className="app-container tab-content">
-        <div className="glass-panel" style={{ padding: '1.5rem', width: '100%', maxWidth: '500px' }}>
-          {activeTab === 'home' && renderHomeTab()}
-          {activeTab === 'speed' && renderSpeedTab()}
-          {activeTab === 'book' && renderBookTab()}
-          {activeTab === 'settings' && renderSettingsTab()}
+      <div className="app-container">
+        <div className="main-content">
+          <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', overflowY: 'auto', paddingBottom: '1rem' }}>
+            {activeTab === 'home' && renderHomeTab()}
+            {activeTab === 'speed' && renderSpeedTab()}
+            {activeTab === 'book' && renderBookTab()}
+            {activeTab === 'settings' && renderSettingsTab()}
+          </div>
         </div>
 
         <div className="tab-bar">
@@ -909,7 +962,7 @@ function App() {
         </div>
 
         {showToast && (
-          <div className="fade-in" style={{ position: 'fixed', bottom: '6rem', left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.8)', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '30px', fontSize: '0.875rem', fontWeight: 600, zIndex: 200, pointerEvents: 'none' }}>
+          <div className="fade-in" style={{ position: 'fixed', bottom: 'calc(var(--tab-bar-height) + 1rem)', left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.8)', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '30px', fontSize: '0.875rem', fontWeight: 600, zIndex: 200, pointerEvents: 'none' }}>
             ✅ URLを コピーしたよ！
           </div>
         )}
@@ -918,118 +971,125 @@ function App() {
   }
 
   // Shiritori Screen
+  /* Refactored Shiritori Screen */
   if (isShiritori) {
     const lastWord = shiritoriHistory.length > 0 ? shiritoriHistory[shiritoriHistory.length - 1].name : '';
     const nextChar = lastWord ? normalizeLastChar(lastWord) : '';
 
     return (
       <div className="app-container">
-        <div className="glass-panel" style={{ padding: '1.5rem', width: '100%', maxWidth: '500px', display: 'flex', flexDirection: 'column', height: '90vh', position: 'relative' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <button onClick={() => setIsShiritori(false)} style={{ padding: '0.4rem 0.8rem', background: 'var(--bg-gray)', fontSize: '0.8rem', borderRadius: '8px', boxShadow: 'none' }}>
-              ← もどる
-            </button>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 800 }}>🔄 しりとりバトル</h2>
-            <div style={{ width: '60px' }}></div>
-          </div>
-
-          {shiritoriLoading ? (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '1rem' }}>
-              <div className="pulse" style={{ fontSize: '3rem' }}>🔍</div>
-              <p style={{ fontWeight: 700, textAlign: 'center' }}>ポケモンの なまえを<br />おぼえています...</p>
-              <div style={{ width: '200px', height: '8px', background: 'var(--bg-gray)', borderRadius: '4px', overflow: 'hidden' }}>
-                <div style={{ height: '100%', background: 'linear-gradient(90deg, var(--primary-color), #DA70D6)', width: `${Math.min(100, (allPokemonDatabase.length / 1025) * 100)}%`, transition: 'width 0.3s' }}></div>
-              </div>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{allPokemonDatabase.length} / 1025</p>
+        <div className="main-content">
+          <div className="glass-panel" style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '1rem' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexShrink: 0 }}>
+              <button onClick={() => setIsShiritori(false)} className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
+                ← もどる
+              </button>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: 800 }}>🔄 しりとりバトル</h2>
+              <div style={{ width: '60px' }}></div>
             </div>
-          ) : (
-            <>
-              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', padding: '0.5rem', marginBottom: '1rem' }}>
-                {shiritoriHistory.length === 0 && (
-                  <div style={{ textAlign: 'center', marginTop: '2rem', color: 'var(--text-secondary)' }}>
-                    <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>🗣️</div>
-                    <p style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>しりとりを はじめよう！</p>
-                    <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>しっている ポケモンの なまえを<br />したの はこに いれてね。</p>
-                  </div>
-                )}
-                {shiritoriHistory.map((chat, i) => (
-                  <div key={i} className="fade-in" style={{ display: 'flex', justifyContent: chat.sender === 'player' ? 'flex-end' : 'flex-start', alignItems: 'center', gap: '0.5rem' }}>
-                    {chat.sender === 'ai' && (
-                      <div style={{ width: '40px', height: '40px', background: 'white', borderRadius: '50%', border: '1px solid var(--border-color)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <img src={chat.image} alt="" style={{ width: '90%', height: '90%', objectFit: 'contain' }} />
-                      </div>
-                    )}
-                    <div style={{ 
-                      maxWidth: '75%', 
-                      padding: '0.75rem 1rem', 
-                      borderRadius: '18px', 
-                      background: chat.sender === 'player' ? 'var(--primary-color)' : 'white',
-                      color: chat.sender === 'player' ? 'white' : 'var(--text-primary)',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                      border: chat.sender === 'ai' ? '1px solid var(--border-color)' : 'none',
-                      fontWeight: 700,
-                      fontSize: '1rem'
-                    }}>
-                      {chat.name}
-                    </div>
-                    {chat.sender === 'player' && (
-                      <div style={{ width: '40px', height: '40px', background: 'white', borderRadius: '50%', border: '1px solid var(--border-color)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <img src={chat.image} alt="" style={{ width: '90%', height: '90%', objectFit: 'contain' }} />
-                      </div>
-                    )}
-                  </div>
-                ))}
-                {isAiThinking && (
-                  <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '0.5rem' }}>
-                    <div className="glass-panel pulse" style={{ padding: '0.6rem 1.25rem', borderRadius: '18px', fontSize: '0.875rem', background: 'white', border: '1px solid var(--border-color)', fontWeight: 600 }}>
-                      カンガエチュウ...
-                    </div>
-                  </div>
-                )}
-                <div id="shiritori-bottom" style={{ height: '20px' }}></div>
-              </div>
 
-              {shiritoriWinner ? (
-                <div className="fade-in" style={{ background: 'var(--bg-gray)', padding: '1.5rem', borderRadius: '16px', textAlign: 'center', marginBottom: '1rem', border: '2px solid var(--border-color)' }}>
-                  <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>{shiritoriWinner === 'player' ? '🏆' : '💦'}</div>
-                  <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>
-                    {shiritoriWinner === 'player' ? 'きみの かち！' : 'AIの かち！'}
-                  </h2>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
-                    {shiritoriWinner === 'player' ? 'AIは もう なまえが おもいつかないみたい！' : '「ン」がついちゃったね。'}
-                  </p>
-                  <button onClick={startShiritori} style={{ width: '100%', padding: '1rem', background: 'var(--primary-color)', color: 'white', fontWeight: 800, borderRadius: '12px', fontSize: '1.1rem' }}>
-                    もういっかい！
-                  </button>
+            {shiritoriLoading ? (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '1rem' }}>
+                <div className="pulse" style={{ fontSize: '3rem' }}>🔍</div>
+                <p style={{ fontWeight: 700, textAlign: 'center' }}>ポケモンの なまえを<br />おぼえています...</p>
+                <div style={{ width: '200px', height: '8px', background: 'var(--bg-gray)', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', background: 'linear-gradient(90deg, var(--primary-color), #DA70D6)', width: `${Math.min(100, (allPokemonDatabase.length / 1025) * 100)}%`, transition: 'width 0.3s' }}></div>
                 </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  {!isAiThinking && nextChar && (
-                    <div className="fade-in" style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--primary-color)', textAlign: 'center' }}>
-                      つぎは <span style={{ fontSize: '1.25rem', background: 'var(--primary-color)', color: 'white', padding: '0.1rem 0.5rem', borderRadius: '6px', margin: '0 0.2rem' }}>{nextChar}</span> から はじまる なまえを いれてね！
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{allPokemonDatabase.length} / 1025</p>
+              </div>
+            ) : (
+              <>
+                {/* Chat History Area (Scrollable) */}
+                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', padding: '0.5rem', marginBottom: '1rem', scrollBehavior: 'smooth' }}>
+                  {shiritoriHistory.length === 0 && (
+                    <div style={{ textAlign: 'center', marginTop: 'auto', marginBottom: 'auto', color: 'var(--text-secondary)' }}>
+                      <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>🗣️</div>
+                      <p style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>しりとりを はじめよう！</p>
+                      <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>しっている ポケモンの なまえを<br />したの はこに いれてね。</p>
                     </div>
                   )}
-                  <form onSubmit={handleShiritoriSubmit} style={{ display: 'flex', gap: '0.5rem', position: 'relative' }}>
-                    {shiritoriError && (
-                      <div className="bounce-in" style={{ position: 'absolute', top: '-3rem', left: 0, right: 0, background: '#fee2e2', color: '#dc2626', padding: '0.5rem', borderRadius: '10px', fontSize: '0.8rem', fontWeight: 800, textAlign: 'center', border: '2px solid #fecaca', zIndex: 50 }}>
-                        ⚠️ {shiritoriError}
+                  {shiritoriHistory.map((chat, i) => (
+                    <div key={i} className="fade-in" style={{ display: 'flex', justifyContent: chat.sender === 'player' ? 'flex-end' : 'flex-start', alignItems: 'center', gap: '0.5rem' }}>
+                      {chat.sender === 'ai' && (
+                        <div style={{ width: '36px', height: '36px', background: 'white', borderRadius: '50%', border: '1px solid var(--border-color)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <img src={chat.image} alt="" style={{ width: '90%', height: '90%', objectFit: 'contain' }} />
+                        </div>
+                      )}
+                      <div style={{ 
+                        maxWidth: '75%', 
+                        padding: '0.75rem 1rem', 
+                        borderRadius: '18px', 
+                        borderTopLeftRadius: chat.sender === 'ai' ? '4px' : '18px',
+                        borderTopRightRadius: chat.sender === 'player' ? '4px' : '18px',
+                        background: chat.sender === 'player' ? 'var(--primary-color)' : 'white',
+                        color: chat.sender === 'player' ? 'white' : 'var(--text-primary)',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                        border: chat.sender === 'ai' ? '1px solid var(--border-color)' : 'none',
+                        fontWeight: 700,
+                        fontSize: '1rem'
+                      }}>
+                        {chat.name}
                       </div>
-                    )}
-                    <input 
-                      type="text" 
-                      value={shiritoriInput}
-                      onChange={(e) => setShiritoriInput(e.target.value)}
-                      placeholder={nextChar ? `「${nextChar}」からはじまるなまえ` : "なまえを いれてね"}
-                      style={{ flex: 1, padding: '1rem', borderRadius: '14px', border: '2px solid var(--border-color)', fontSize: '1rem', outline: 'none', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.05)' }}
-                    />
-                    <button type="submit" disabled={!shiritoriInput.trim() || isAiThinking} style={{ padding: '0 1.5rem', background: 'var(--primary-color)', color: 'white', borderRadius: '14px', fontWeight: 800, fontSize: '1rem' }}>
-                      OK
-                    </button>
-                  </form>
+                      {chat.sender === 'player' && (
+                        <div style={{ width: '36px', height: '36px', background: 'white', borderRadius: '50%', border: '1px solid var(--border-color)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <img src={chat.image} alt="" style={{ width: '90%', height: '90%', objectFit: 'contain' }} />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {isAiThinking && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '0.5rem' }}>
+                      <div className="glass-panel pulse" style={{ padding: '0.6rem 1.25rem', borderRadius: '18px', fontSize: '0.875rem', background: 'white', border: '1px solid var(--border-color)', fontWeight: 600 }}>
+                        カンガエチュウ...
+                      </div>
+                    </div>
+                  )}
+                  <div id="shiritori-bottom" style={{ height: '1px' }}></div>
                 </div>
-              )}
-            </>
-          )}
+
+                {/* Input Area (Fixed at bottom of flex container) */}
+                <div style={{ flexShrink: 0 }}>
+                  {shiritoriWinner ? (
+                    <div className="fade-in" style={{ background: 'rgba(0,0,0,0.05)', padding: '1rem', borderRadius: '16px', textAlign: 'center', border: '1px solid var(--border-color)' }}>
+                      <div style={{ fontSize: '2rem', marginBottom: '0.25rem' }}>{shiritoriWinner === 'player' ? '🏆' : '💦'}</div>
+                      <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.25rem' }}>
+                        {shiritoriWinner === 'player' ? 'きみの かち！' : 'AIの かち！'}
+                      </h2>
+                      <button onClick={startShiritori} className="btn-primary" style={{ width: '100%', marginTop: '0.5rem' }}>
+                        もういっかい！
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {!isAiThinking && nextChar && (
+                        <div className="fade-in" style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--primary-color)', textAlign: 'center' }}>
+                          つぎは <span style={{ fontSize: '1rem', background: 'var(--primary-color)', color: 'white', padding: '0.1rem 0.4rem', borderRadius: '6px' }}>{nextChar}</span> から はじまる なまえ！
+                        </div>
+                      )}
+                      <form onSubmit={handleShiritoriSubmit} style={{ display: 'flex', gap: '0.5rem', position: 'relative' }}>
+                        {shiritoriError && (
+                          <div className="bounce-in" style={{ position: 'absolute', top: '-3rem', left: 0, right: 0, background: '#fee2e2', color: '#dc2626', padding: '0.5rem', borderRadius: '10px', fontSize: '0.8rem', fontWeight: 800, textAlign: 'center', border: '2px solid #fecaca', zIndex: 50 }}>
+                            ⚠️ {shiritoriError}
+                          </div>
+                        )}
+                        <input 
+                          type="text" 
+                          value={shiritoriInput}
+                          onChange={(e) => setShiritoriInput(e.target.value)}
+                          placeholder={nextChar ? `「${nextChar}」からはじまるなまえ` : "なまえを いれてね"}
+                          style={{ flex: 1, padding: '0.8rem', borderRadius: '12px', border: '2px solid var(--border-color)', fontSize: '1rem', outline: 'none', background: 'white' }}
+                        />
+                        <button type="submit" className="btn-primary" disabled={!shiritoriInput.trim() || isAiThinking} style={{ padding: '0 1.2rem' }}>
+                          OK
+                        </button>
+                      </form>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -1049,214 +1109,169 @@ function App() {
   // Quiz Screen
   if (!currentPokemon) return null;
 
+  /* Refactored Game Render */
   return (
     <div className="app-container">
-      <div className="glass-panel bounce-in" style={{ padding: '2rem', width: '100%', maxWidth: '600px', position: 'relative' }}>
-        <button onClick={resetGame} style={{ position: 'absolute', top: '1rem', left: '1rem', padding: '0.5rem 0.875rem', fontSize: '0.875rem', background: 'var(--bg-gray)', color: 'var(--text-secondary)' }}>
-          ← もどる
-        </button>
-        <div style={{ position: 'absolute', top: '1rem', right: '1rem', textAlign: 'right' }}>
-          {timeLeft !== null && (
-            <div style={{ 
-              fontSize: '1.5rem', 
-              fontWeight: 800, 
-              color: timeLeft <= 10 ? 'var(--error)' : 'var(--text-primary)',
-              background: 'var(--bg-gray)',
-              padding: '0.25rem 0.75rem',
-              borderRadius: '8px',
-              border: '2px solid',
-              borderColor: timeLeft <= 10 ? 'var(--error)' : 'var(--border-color)',
-              marginBottom: '0.5rem',
-              animation: timeLeft <= 10 ? 'pulse 1s infinite' : 'none'
-            }}>
-              ⏱️ {timeLeft}s
-            </div>
-          )}
-          <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>てんすう: <strong style={{ color: 'var(--text-primary)' }}>{score}</strong></div>
-          <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#f59e0b' }}>
-            {currentStreak > 0 && '🔥'}
-            れんしょう: {currentStreak}
+      <div className="main-content">
+        {/* Game Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '0.5rem' }}>
+          <button onClick={resetGame} className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
+            ← もどる
+          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+             <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-color)' }}>{score} <span style={{fontSize: '0.8rem', color: 'var(--text-secondary)'}}>pts</span></div>
+             {currentStreak > 0 && <div style={{ fontSize: '0.8rem', color: '#f59e0b', fontWeight: 700 }}>🔥 {currentStreak}連勝</div>}
           </div>
         </div>
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem', marginTop: '2rem' }}>
-          <div style={{ position: 'relative', display: 'inline-block' }}>
-            {currentPokemon.isShiny && showResult && (
-              <div className="shiny-sparkle" style={{ position: 'absolute', top: '-10px', right: '-10px', fontSize: '2rem', animation: 'spin 2s linear infinite', zIndex: 5 }}>✨</div>
-            )}
-            
-            {displayMode === 'cry' && !showResult ? (
-              <div 
-                onClick={playCry}
-                className="bounce-in"
-                style={{ 
-                  width: '250px', 
-                  height: '250px', 
-                  borderRadius: '125px', 
-                  background: 'var(--bg-gray)', 
-                  display: 'flex', 
-                  flexDirection: 'column',
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  border: '4px dashed var(--border-color)',
-                  gap: '0.5rem'
-                }}
-              >
-                <div style={{ fontSize: '5rem' }}>🔈</div>
-                <div style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-secondary)' }}>もういちど きく</div>
-              </div>
-            ) : (
-              <img 
-                src={currentPokemon.isShiny && showResult ? currentPokemon.shinyImage : currentPokemon.image} 
-                alt="Pokemon" 
-                className={`${displayMode === 'silhouette' && !showResult ? 'pokemon-silhouette' : 'pokemon-reveal'} ${currentPokemon.isShiny && showResult ? 'shiny-glow' : ''}`}
-                style={{ width: '250px', height: '250px', objectFit: 'contain' }} 
-              />
-            )}
 
-            {currentPokemon.cry && !showResult && displayMode !== 'cry' && (
-              <button 
-                onClick={playCry} 
-                style={{ position: 'absolute', bottom: '0', right: '0', background: 'var(--bg-panel)', padding: '0.5rem', borderRadius: '50%', border: '1px solid var(--border-color)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
-                title="なきごえをきく"
-              >
-                🔊
-              </button>
-            )}
+        {timeLeft !== null && (
+          <div style={{ 
+            position: 'absolute', top: '1rem', left: '50%', transform: 'translateX(-50%)',
+            background: timeLeft <= 10 ? 'var(--error)' : 'var(--bg-panel)',
+            color: timeLeft <= 10 ? 'white' : 'var(--text-primary)',
+            padding: '0.25rem 1rem', borderRadius: '20px', fontWeight: 800,
+            border: '1px solid var(--border-color)',
+            boxShadow: 'var(--shadow-sm)',
+            zIndex: 20
+          }}>
+            ⏱️ {timeLeft}
           </div>
-          <h3 style={{ marginTop: '1rem', fontSize: '1.25rem', fontWeight: 600 }}>
-            {quizCategory === 'type' ? 'このポケモンの「じゃくてん」はどれ？' : 
-             (displayMode === 'cry' && !showResult ? 'この なきごえは だーれだ？' : 
-              (displayMode === 'silhouette' ? 'ポケモン だーれだ？' : 'このポケモンの名前は？'))}
-          </h3>
-          
-          {hintLevel > 0 && (
-            <div className="fade-in" style={{ marginTop: '0.5rem', fontSize: '0.875rem', padding: '0.5rem', background: 'var(--bg-gray)', borderRadius: '8px' }}>
-              💡 <strong>ヒント:</strong> {hintLevel === 1 ? `タイプ: ${currentPokemon.types?.join(' / ')}` : `さいしょのもじ: ${currentPokemon.name[0]}`}
+        )}
+
+        {/* Pokemon Display Area */}
+        <div className="pokemon-display-area">
+          <div style={{ position: 'relative' }}>
+             {/* Shiny Effect */}
+             {currentPokemon.isShiny && showResult && (
+               <div className="shiny-sparkle" style={{ position: 'absolute', top: '-20px', right: '-20px', fontSize: '3rem', animation: 'spin 3s linear infinite', zIndex: 5 }}>✨</div>
+             )}
+
+             {/* Image / Silhouette / Cry Button */}
+             {displayMode === 'cry' && !showResult ? (
+                 <button onClick={playCry} className="bounce-in btn-secondary" style={{ width: '200px', height: '200px', borderRadius: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', border: '4px dashed var(--border-color)' }}>
+                    <span style={{ fontSize: '4rem' }}>🔈</span>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 700 }}>タップして きく</span>
+                 </button>
+             ) : (
+                 <img 
+                   src={currentPokemon.isShiny && showResult ? currentPokemon.shinyImage : currentPokemon.image} 
+                   alt="Pokemon" 
+                   className={`pokemon-image ${displayMode === 'silhouette' && !showResult ? 'pokemon-silhouette' : 'pokemon-reveal'} ${currentPokemon.isShiny && showResult ? 'shiny-glow' : ''}`}
+                 />
+             )}
+
+             {/* Cry Button (Overlay) */}
+             {currentPokemon.cry && !showResult && displayMode !== 'cry' && (
+                <button onClick={playCry} className="btn-icon" style={{ position: 'absolute', bottom: 0, right: 0, background: 'var(--bg-panel)', border: '1px solid var(--border-color)' }}>
+                  🔊
+                </button>
+             )}
+          </div>
+        </div>
+
+        {/* Question Text */}
+        <h3 style={{ textAlign: 'center', margin: '1rem 0', fontSize: '1.2rem', fontWeight: 700 }}>
+             {quizCategory === 'type' ? 'このポケモンの「じゃくてん」は？' : 
+              (displayMode === 'cry' && !showResult ? 'だれの なきごえ？' : 
+               (displayMode === 'silhouette' ? 'ポケモン だーれだ？' : 'このポケモンの名前は？'))}
+        </h3>
+
+        {/* Hints */}
+        {!showResult && hintLevel > 0 && (
+           <div className="fade-in glass-panel" style={{ padding: '0.5rem 1rem', marginBottom: '1rem', textAlign: 'center', fontSize: '0.9rem' }}>
+              💡 {hintLevel === 1 ? `タイプ: ${currentPokemon.types?.join(' / ')}` : `ヒント: ${currentPokemon.name[0]}...`}
+           </div>
+        )}
+        {!showResult && hintLevel < 2 && (
+            <div style={{ textAlign: 'center', marginBottom: '1rem', height: '30px' }}>
+               <button onClick={() => setHintLevel(h => h + 1)} style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', borderRadius: '20px' }}>
+                 💡 ヒント
+               </button>
             </div>
-          )}
-        </div>
+        )}
 
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', justifyContent: 'center' }}>
-          {!showResult && hintLevel < 2 && (
-            <button 
-              onClick={() => setHintLevel(prev => prev + 1)} 
-              style={{ padding: '0.4rem 1rem', fontSize: '0.75rem', background: 'var(--bg-gray)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}
-            >
-              💡 ヒントをみる
-            </button>
-          )}
-        </div>
-
+        {/* Options / Input Area */}
         {gameMode === 'choice' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', width: '100%', marginTop: '1rem' }}>
-            {choices.map((choice, index) => (
-              <button 
-                key={`${choice}-${index}`} 
-                onClick={() => checkAnswer(choice)} 
-                disabled={showResult} 
-                className="fade-in"
-                style={{ 
-                  animationDelay: `${index * 0.1}s`,
-                  padding: '1rem', 
-                  fontSize: '1rem', 
-                  background: 'var(--bg-gray)', 
-                  color: 'var(--text-primary)', 
-                  border: '1px solid var(--border-color)', 
-                  cursor: showResult ? 'not-allowed' : 'pointer',
-                  boxShadow: 'none'
-                }}
-              >
-                {choice}
-              </button>
-            ))}
-          </div>
+           <div className="options-area">
+              {choices.map((choice, i) => (
+                 <button 
+                   key={`${choice}-${i}`}
+                   onClick={() => checkAnswer(choice)}
+                   disabled={showResult}
+                   className="option-btn fade-in"
+                   style={{ animationDelay: `${i * 0.05}s` }}
+                 >
+                   {choice}
+                 </button>
+              ))}
+           </div>
         )}
 
         {gameMode === 'input' && (
-          <form onSubmit={handleInputSubmit} style={{ width: '100%', marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
-            <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} disabled={showResult} placeholder="なまえをかいてね..." autoFocus />
-            <button type="submit" disabled={showResult || !inputValue.trim()} style={{ background: 'var(--primary-color)', color: 'white', minWidth: '80px' }}>
-              こたえる
-            </button>
-          </form>
+           <form onSubmit={handleInputSubmit} className="input-area">
+              <input 
+                 type="text" 
+                 value={inputValue} 
+                 onChange={(e) => setInputValue(e.target.value)} 
+                 disabled={showResult} 
+                 placeholder="なまえを いれてね" 
+                 autoFocus 
+              />
+              <button type="submit" className="btn-primary" disabled={showResult || !inputValue.trim()} style={{ width: '100%', marginTop: '0.5rem' }}>
+                 こたえる
+              </button>
+           </form>
         )}
 
+        {/* Result Overlay */}
         {showResult && (
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(0,0,0,0.1)', borderRadius: '16px', zIndex: 10 }}>
-            <div className="glass-panel bounce-in" style={{ padding: '2rem', textAlign: 'center', background: 'var(--bg-panel)', border: isCorrect ? '2px solid var(--success)' : '2px solid var(--error)', width: '90%', maxWidth: '450px', maxHeight: '90%', overflowY: 'auto' }}>
-              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>
-                {isCorrect ? '🎉' : '😢'}
-              </div>
-              {currentPokemon.isShiny && isCorrect && (
-                <div style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: '#fbbf24', fontWeight: 700, animation: 'pulse 1s infinite' }}>
-                  ✨ いろちがい！ ✨
-                </div>
-              )}
-              <h2 style={{ fontSize: '1.5rem', color: isCorrect ? 'var(--success)' : 'var(--error)', marginBottom: '0.25rem', fontWeight: 700 }}>
-                {isCorrect ? 'せいかい！' : 'ざんねん...'}
-              </h2>
-              <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-                {currentPokemon.genus}
-              </p>
-              <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', fontWeight: 800 }}>{currentPokemon.name}</h1>
-              
-              <div style={{ marginBottom: '1.5rem', position: 'relative', display: 'inline-block' }}>
-                <img 
-                  src={currentPokemon.isShiny ? currentPokemon.shinyImage : currentPokemon.image} 
-                  alt={currentPokemon.name} 
-                  style={{ width: '180px', height: '180px', objectFit: 'contain' }} 
-                />
-                {currentPokemon.isShiny && (
-                  <div className="shiny-sparkle" style={{ position: 'absolute', top: '0', right: '0', fontSize: '1.5rem', animation: 'spin 2s linear infinite' }}>✨</div>
-                )}
-              </div>
-              
-              <div style={{ background: 'var(--bg-gray)', padding: '1rem', borderRadius: '12px', textAlign: 'left', marginBottom: '1.5rem' }}>
-                <p style={{ fontSize: '0.875rem', lineHeight: '1.6', color: 'var(--text-primary)' }}>
-                  {quizCategory === 'type' && (
-                    <div style={{ marginBottom: '1rem', padding: '0.75rem', background: 'var(--bg-panel)', borderRadius: '8px', borderLeft: '4px solid var(--primary-color)' }}>
-                      <span style={{ fontWeight: 800, color: 'var(--primary-color)' }}>{correctAnswer}</span> は 
-                      <span style={{ fontWeight: 800 }}> {currentPokemon.name}</span> ({currentPokemon.types?.join('・')}) 
-                      の じゃくてんだ！
+           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div className="glass-panel bounce-in" style={{ width: '90%', maxWidth: '400px', padding: '2rem', textAlign: 'center', background: 'var(--bg-panel)', maxHeight: '90vh', overflowY: 'auto' }}>
+                 <div style={{ fontSize: '3.5rem', marginBottom: '0.5rem' }}>{isCorrect ? '🎉' : '😢'}</div>
+                 <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: isCorrect ? 'var(--success)' : 'var(--error)', marginBottom: '0.5rem' }}>
+                   {isCorrect ? 'せいかい！' : 'ざんねん...'}
+                 </h2>
+                 <div style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem' }}>
+                   {currentPokemon.name}
+                 </div>
+                 
+                 <img src={currentPokemon.isShiny ? currentPokemon.shinyImage : currentPokemon.image} style={{ height: '150px', objectFit: 'contain' }} />
+
+                 <div style={{ margin: '1.5rem 0', textAlign: 'left', background: 'rgba(255,255,255,0.5)', padding: '1rem', borderRadius: '12px' }}>
+                    {quizCategory === 'type' && !isCorrect && (
+                       <div style={{ marginBottom: '0.5rem', color: 'var(--error)', fontWeight: 700 }}>
+                          せいかい: {correctAnswer}
+                       </div>
+                    )}
+                    <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                       {currentPokemon.flavorText}
                     </div>
-                  )}
-                  {currentPokemon.flavorText || 'せつめいがみつかりませんでした。'}
-                </p>
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
-                  {currentPokemon.types?.map(type => (
-                    <span key={type} style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', background: 'var(--bg-panel)', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
-                      {type}
-                    </span>
-                  ))}
-                  {currentPokemon.cry && (
-                    <button onClick={playCry} style={{ background: 'transparent', padding: '0', boxShadow: 'none', fontSize: '1rem', marginLeft: 'auto' }}>🔊</button>
-                  )}
-                </div>
+                 </div>
+
+                 <button onClick={nextQuestion} className="btn-primary" style={{ width: '100%' }}>
+                    つぎへ
+                 </button>
               </div>
-              
-              <button onClick={nextQuestion} style={{ background: 'var(--primary-color)', color: 'white', padding: '0.875rem 2.5rem', fontSize: '1.125rem', fontWeight: 600, width: '100%' }}>
-                つぎへ →
-              </button>
-            </div>
-          </div>
+           </div>
         )}
+        
+        {/* Time Up Overlay */}
         {isTimeUp && (
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(0,0,0,0.7)', borderRadius: '16px', zIndex: 100, backdropFilter: 'blur(4px)' }}>
-            <div className="glass-panel bounce-in" style={{ padding: '3rem 2rem', textAlign: 'center', background: 'var(--bg-panel)', width: '90%', maxWidth: '400px' }}>
-              <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>⏰</div>
-              <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>タイムアップ！</h2>
-              <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 100 }}>
+            <div className="glass-panel bounce-in" style={{ padding: '2rem', textAlign: 'center', width: '90%', maxWidth: '360px', border: '1px solid var(--border-color)' }}>
+              <div style={{ fontSize: '4rem', marginBottom: '0.5rem', animation: 'tada 1s' }}>⏰</div>
+              <h2 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '0.5rem', color: 'var(--text-primary)', textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>タイムアップ！</h2>
+              <p style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
                 しゅうりょう！ きみの スコアは...
               </p>
               
-              <div style={{ marginBottom: '2.5rem' }}>
-                <div style={{ fontSize: '4rem', fontWeight: 900, color: 'var(--primary-color)', lineHeight: '1' }}>{score}</div>
-                <div style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>もん せいかい！</div>
+              <div style={{ marginBottom: '2rem', padding: '1.5rem', background: 'var(--bg-panel)', borderRadius: '20px', border: '1px solid var(--border-color)' }}>
+                <div style={{ fontSize: '4.5rem', fontWeight: 900, color: 'var(--primary-color)', lineHeight: '1', textShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>{score}</div>
+                <div style={{ fontSize: '1rem', color: 'var(--text-secondary)', marginTop: '0.5rem', fontWeight: 700 }}>もん せいかい！</div>
               </div>
 
               {score > (timeAttackBestScores[timeLimit] || 0) && (
-                <div style={{ marginBottom: '2rem', padding: '0.5rem', background: '#fef3c7', color: '#92400e', borderRadius: '8px', fontWeight: 700, animation: 'pulse 1s infinite' }}>
+                <div style={{ marginBottom: '2rem', padding: '0.75rem', background: 'linear-gradient(135deg, #fffbeb, #fef3c7)', color: '#b45309', borderRadius: '12px', fontWeight: 800, animation: 'pulse 1.5s infinite', border: '1px solid #fde68a', boxShadow: '0 4px 6px rgba(251, 191, 36, 0.2)' }}>
                   🎊 しんきろく たっせい！ 🎊
                 </div>
               )}
@@ -1264,15 +1279,15 @@ function App() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
                 <button 
                   onClick={() => {
-                    // Update best score if needed
                     if (score > (timeAttackBestScores[timeLimit] || 0)) {
                       const newBestScores = { ...timeAttackBestScores, [timeLimit]: score };
                       setTimeAttackBestScores(newBestScores);
                       localStorage.setItem('timeAttackBestScores', JSON.stringify(newBestScores));
                     }
-                    startGame(gameMode || 'choice', quizCategory, true);
+                    startGame('choice', quizCategory, true);
                   }} 
-                  style={{ background: 'var(--primary-color)', color: 'white', padding: '1rem', fontSize: '1.25rem', fontWeight: 700 }}
+                  className="btn-primary"
+                  style={{ padding: '1rem', fontSize: '1.1rem' }}
                 >
                   もういちど ちょうせん
                 </button>
@@ -1285,7 +1300,8 @@ function App() {
                     }
                     resetGame();
                   }} 
-                  style={{ background: 'var(--bg-gray)', color: 'var(--text-primary)', padding: '1rem' }}
+                  className="btn-secondary"
+                  style={{ padding: '1rem' }}
                 >
                   おわる
                 </button>
@@ -1293,52 +1309,60 @@ function App() {
             </div>
           </div>
         )}
+
         {showAbout && (
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(0,0,0,0.7)', borderRadius: '16px', zIndex: 200, backdropFilter: 'blur(4px)' }}>
-            <div className="glass-panel bounce-in" style={{ padding: '2rem', textAlign: 'left', background: 'var(--bg-panel)', width: '90%', maxWidth: '500px', maxHeight: '85%', overflowY: 'auto' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)' }}>❓ あそびかた</h2>
-                <button onClick={() => setShowAbout(false)} style={{ background: 'var(--bg-gray)', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.875rem' }}>❌</button>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 200 }}>
+            <div className="glass-panel bounce-in" style={{ padding: '1.5rem', textAlign: 'left', width: '90%', maxWidth: '400px', maxHeight: '80%', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>❓ あそびかた</h2>
+                <button onClick={() => setShowAbout(false)} className="btn-secondary" style={{ width: '32px', height: '32px', padding: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>❌</button>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div className="scroll-area" style={{ flex: 1, paddingRight: '0.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                 <section>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>🎮 クイズの モード</h3>
-                  <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-                    <li><strong>🎯 えらぶ</strong>: 4つの なまえから せいかいを えらぼう！</li>
-                    <li><strong>⌨️ かく</strong>: キーボードで ポケモンの なまえを いれよう！</li>
-                    <li><strong>🔈 こえ</strong>: ポケモンの なきごえだけで なまえを あてよう！</li>
-                    <li><strong>🧪 タイプ</strong>: ポケモンの 「じゃくてん」を あてよう！</li>
-                    <li><strong>🔄 しりとり</strong>: AIと ポケモンの なまえで しりとりバトル！</li>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '0.75rem', color: 'var(--primary-color)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '1.2rem' }}>🎮</span> クイズの モード
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}><span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>🎯 えらぶ</span>: 4つの なまえから せいかいを えらぼう！</div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}><span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>⌨️ かく</span>: キーボードで ポケモンの なまえを いれよう！</div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}><span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>🔈 こえ</span>: ポケモンの なきごえだけで なまえを あてよう！</div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}><span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>🧪 タイプ</span>: ポケモンの 「じゃくてん」を あてよう！</div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}><span style={{ fontWeight: 800, color: 'var(--text-primary)' }}>🔄 しりとり</span>: AIと ポケモンの なまえで しりとりバトル！</div>
                   </div>
                 </section>
 
                 <section>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>📈 レベルと 称号</h3>
-                  <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '0.75rem', color: 'var(--primary-color)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '1.2rem' }}>📈</span> レベルと 称号
+                  </h3>
+                  <div className="glass-panel" style={{ padding: '1rem', background: 'rgba(0,0,0,0.03)', fontSize: '0.85rem', lineHeight: '1.6' }}>
                     せいかいするたびに けいけんちが たまるよ！<br />
                     5もん せいかいするごとに <strong>レベルアップ！</strong><br />
                     「ジムリーダー」や 「チャンピオン」を めざして がんばろう！
-                  </p>
+                  </div>
                 </section>
 
                 <section>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>📱 アプリにする ほうほう (PWA)</h3>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', background: 'var(--bg-gray)', padding: '1rem', borderRadius: '12px' }}>
-                    <p style={{ fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>🍏 iPhone / iPad</p>
-                    <p style={{ marginBottom: '1rem' }}>Safariの「共有ボタン（四角と矢印）」を おして <strong>「ホーム画面に追加」</strong> をえらんでね！</p>
-                    
-                    <p style={{ fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>🤖 Android / Chrome</p>
-                    <p style={{ marginBottom: '1rem' }}>「︙」メニューから <strong>「アプリをインストール」</strong> をえらんでね！</p>
-
-                    <p style={{ fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>🔥 Fireタブレット</p>
-                    <p>Silkブラウザの メニューから <strong>「ホーム画面に追加」</strong> をえらんでね！</p>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '0.75rem', color: 'var(--primary-color)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '1.2rem' }}>📱</span> アプリにする (PWA)
+                  </h3>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <div>
+                      <p style={{ fontWeight: 800, marginBottom: '0.25rem', color: 'var(--text-primary)' }}>🍏 iPhone / iPad</p>
+                      <p>Safariの「共有ボタン（四角と矢印）」→ <strong>「ホーム画面に追加」</strong></p>
+                    </div>
+                    <div>
+                      <p style={{ fontWeight: 800, marginBottom: '0.25rem', color: 'var(--text-primary)' }}>🤖 Android / Chrome</p>
+                      <p>「︙」メニュー → <strong>「アプリをインストール」</strong></p>
+                    </div>
                   </div>
                 </section>
 
                 <button 
                   onClick={() => setShowAbout(false)}
-                  style={{ width: '100%', padding: '1rem', background: 'var(--primary-color)', color: 'white', fontWeight: 700, fontSize: '1.1rem', marginTop: '1rem' }}
+                  className="btn-primary"
+                  style={{ width: '100%', padding: '1rem', marginTop: '0.5rem' }}
                 >
                   わかった！
                 </button>
