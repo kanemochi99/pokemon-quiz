@@ -55,6 +55,60 @@ const THEMES: { id: ThemeType; color: string; label: string }[] = [
   { id: 'green', color: '#10b981', label: 'みどり' },
 ];
 
+// Gacha items with rarity
+type GachaItemType = 'theme' | 'avatar' | 'hint' | 'bonus';
+type GachaRarity = 'common' | 'rare' | 'epic' | 'legendary';
+
+interface GachaItem {
+  id: string;
+  name: string;
+  type: GachaItemType;
+  rarity: GachaRarity;
+  icon: string;
+  description: string;
+  value?: any;
+}
+
+const GACHA_ITEMS: GachaItem[] = [
+  // Common items (60% chance)
+  { id: 'hint_1', name: 'ヒント券', type: 'hint', rarity: 'common', icon: '💡', description: 'ヒントを1回使える' },
+  { id: 'coins_10', name: '10コイン', type: 'bonus', rarity: 'common', icon: '🪙', description: 'コインを10枚もらえる', value: 10 },
+  { id: 'avatar_1', name: 'モンスターボール', type: 'avatar', rarity: 'common', icon: '⚪', description: 'アイコンに設定できる' },
+  { id: 'avatar_2', name: 'スーパーボール', type: 'avatar', rarity: 'common', icon: '🔵', description: 'アイコンに設定できる' },
+  
+  // Rare items (25% chance)
+  { id: 'theme_purple', name: 'むらさきテーマ', type: 'theme', rarity: 'rare', icon: '💜', description: '特別なテーマ', value: 'purple' },
+  { id: 'theme_orange', name: 'オレンジテーマ', type: 'theme', rarity: 'rare', icon: '🧡', description: '特別なテーマ', value: 'orange' },
+  { id: 'coins_50', name: '50コイン', type: 'bonus', rarity: 'rare', icon: '💰', description: 'コインを50枚もらえる', value: 50 },
+  { id: 'avatar_3', name: 'ハイパーボール', type: 'avatar', rarity: 'rare', icon: '🟡', description: 'レアなアイコン' },
+  
+  // Epic items (12% chance)
+  { id: 'theme_rainbow', name: 'にじいろテーマ', type: 'theme', rarity: 'epic', icon: '🌈', description: '虹色のテーマ', value: 'rainbow' },
+  { id: 'coins_100', name: '100コイン', type: 'bonus', rarity: 'epic', icon: '💎', description: 'コインを100枚もらえる', value: 100 },
+  { id: 'avatar_4', name: 'マスターボール', type: 'avatar', rarity: 'epic', icon: '🟣', description: 'エピックアイコン' },
+  
+  // Legendary items (3% chance)
+  { id: 'theme_shiny', name: 'ひかるテーマ', type: 'theme', rarity: 'legendary', icon: '✨', description: '伝説のテーマ', value: 'shiny' },
+  { id: 'coins_500', name: '500コイン', type: 'bonus', rarity: 'legendary', icon: '👑', description: 'コインを500枚もらえる', value: 500 },
+  { id: 'avatar_5', name: 'ミュウ', type: 'avatar', rarity: 'legendary', icon: '🌟', description: '伝説のアイコン' },
+];
+
+const RARITY_COLORS = {
+  common: '#9ca3af',
+  rare: '#3b82f6',
+  epic: '#a855f7',
+  legendary: '#f59e0b'
+};
+
+const RARITY_LABELS = {
+  common: 'コモン',
+  rare: 'レア',
+  epic: 'エピック',
+  legendary: 'レジェンド'
+};
+
+const GACHA_COST = 50; // Cost per pull
+
 const MAX_POKEMON_ID = 1010;
 const SHINY_RATE = 0.05;
 
@@ -268,7 +322,15 @@ function App() {
 
   const [showToast, setShowToast] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
-  const [activeTab, setActiveTab] = useState<'home' | 'speed' | 'book' | 'settings'>('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'speed' | 'book' | 'gacha' | 'settings'>('home');
+
+  // Gacha system states
+  const [coins, setCoins] = useState(() => Number(localStorage.getItem('coins')) || 0);
+  const [unlockedItems, setUnlockedItems] = useState<string[]>(() => 
+    JSON.parse(localStorage.getItem('unlockedItems') || '[]')
+  );
+  const [showGachaAnimation, setShowGachaAnimation] = useState(false);
+  const [gachaResult, setGachaResult] = useState<any>(null);
 
   // Shiritori states
   const [isShiritori, setIsShiritori] = useState(false);
@@ -413,6 +475,70 @@ function App() {
     }
   };
 
+  const pullGacha = () => {
+    if (coins < GACHA_COST) {
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2000);
+      return;
+    }
+
+    // Deduct coins
+    const newCoins = coins - GACHA_COST;
+    setCoins(newCoins);
+    localStorage.setItem('coins', String(newCoins));
+
+    // Determine rarity based on probability
+    const rand = Math.random() * 100;
+    let selectedRarity: GachaRarity;
+    if (rand < 3) selectedRarity = 'legendary';
+    else if (rand < 15) selectedRarity = 'epic';
+    else if (rand < 40) selectedRarity = 'rare';
+    else selectedRarity = 'common';
+
+    // Get items of selected rarity
+    const itemsOfRarity = GACHA_ITEMS.filter(item => item.rarity === selectedRarity);
+    const selectedItem = itemsOfRarity[Math.floor(Math.random() * itemsOfRarity.length)];
+
+    // Apply item effect
+    if (selectedItem.type === 'bonus' && selectedItem.value) {
+      const bonusCoins = newCoins + selectedItem.value;
+      setCoins(bonusCoins);
+      localStorage.setItem('coins', String(bonusCoins));
+    }
+
+    // Add to unlocked items if not already unlocked
+    if (!unlockedItems.includes(selectedItem.id)) {
+      const newUnlocked = [...unlockedItems, selectedItem.id];
+      setUnlockedItems(newUnlocked);
+      localStorage.setItem('unlockedItems', JSON.stringify(newUnlocked));
+    }
+
+    // Show animation
+    setGachaResult(selectedItem);
+    setShowGachaAnimation(true);
+
+    // Confetti for rare items
+    if (selectedItem.rarity === 'legendary') {
+      setTimeout(() => {
+        confetti({
+          particleCount: 200,
+          spread: 120,
+          origin: { y: 0.5 },
+          colors: ['#f59e0b', '#fbbf24', '#fcd34d']
+        });
+      }, 500);
+    } else if (selectedItem.rarity === 'epic') {
+      setTimeout(() => {
+        confetti({
+          particleCount: 100,
+          spread: 80,
+          origin: { y: 0.5 },
+          colors: ['#a855f7', '#c084fc', '#e9d5ff']
+        });
+      }, 500);
+    }
+  };
+
   const getLevelInfo = (count: number) => {
     const level = Math.min(100, Math.floor(count / 5) + 1);
     const progress = count % 5;
@@ -458,6 +584,14 @@ function App() {
       )}
       {renderHeader('🎮 ポケモンクイズ')}
       
+      {/* Coin Display */}
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+        <div className="glass-panel" style={{ flex: 1, padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+          <span style={{ fontSize: '1.5rem' }}>🪙</span>
+          <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>{coins}</span>
+        </div>
+      </div>
+
       <div className="glass-panel" style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
         <div style={{ background: 'linear-gradient(135deg, #FFD700, #FFA500)', color: 'white', padding: '0.5rem', borderRadius: '12px', minWidth: '60px', textAlign: 'center', fontWeight: 800, textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
           <div style={{ fontSize: '0.6rem', opacity: 0.9 }}>Lv.</div>
@@ -584,6 +718,90 @@ function App() {
           )}
         </div>
       </div>
+    </div>
+  );
+
+  const renderGachaTab = () => (
+    <div className="fade-in">
+      {renderHeader('🎰 ガチャ', 'コインで アイテムを ゲット！')}
+      
+      {/* Coin Display */}
+      <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '1rem', textAlign: 'center', background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', border: 'none', color: 'white' }}>
+        <div style={{ fontSize: '0.875rem', opacity: 0.9, marginBottom: '0.5rem' }}>もっている コイン</div>
+        <div style={{ fontSize: '2.5rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+          <span>🪙</span>
+          <span>{coins}</span>
+        </div>
+        <div style={{ fontSize: '0.75rem', opacity: 0.8, marginTop: '0.5rem' }}>クイズに せいかいすると コインが もらえるよ！</div>
+      </div>
+
+      {/* Gacha Button */}
+      <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '1rem', textAlign: 'center' }}>
+        <div style={{ fontSize: '3rem', marginBottom: '0.5rem' }}>🎁</div>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.5rem' }}>プレミアムガチャ</h3>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+          レアな テーマや アイテムが でるかも！
+        </p>
+        <button 
+          onClick={pullGacha}
+          disabled={coins < GACHA_COST}
+          className="btn-primary"
+          style={{ 
+            width: '100%', 
+            padding: '1.25rem', 
+            fontSize: '1.125rem',
+            opacity: coins < GACHA_COST ? 0.5 : 1,
+            cursor: coins < GACHA_COST ? 'not-allowed' : 'pointer'
+          }}
+        >
+          {coins < GACHA_COST ? `コインが たりない (${GACHA_COST}コイン ひつよう)` : `${GACHA_COST}コインで ひく`}
+        </button>
+      </div>
+
+      {/* Rarity Info */}
+      <div className="glass-panel" style={{ padding: '1rem' }}>
+        <p style={{ fontSize: '0.875rem', fontWeight: 800, marginBottom: '0.75rem', textAlign: 'center' }}>でる かくりつ</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          {[
+            { rarity: 'legendary', rate: '3%' },
+            { rarity: 'epic', rate: '12%' },
+            { rarity: 'rare', rate: '25%' },
+            { rarity: 'common', rate: '60%' }
+          ].map(({ rarity, rate }) => (
+            <div key={rarity} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', background: 'rgba(0,0,0,0.02)', borderRadius: '8px' }}>
+              <span style={{ fontSize: '0.875rem', fontWeight: 700, color: RARITY_COLORS[rarity as GachaRarity] }}>
+                {RARITY_LABELS[rarity as GachaRarity]}
+              </span>
+              <span style={{ fontSize: '0.875rem', fontWeight: 800 }}>{rate}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Unlocked Items */}
+      {unlockedItems.length > 0 && (
+        <div className="glass-panel" style={{ padding: '1rem', marginTop: '1rem' }}>
+          <p style={{ fontSize: '0.875rem', fontWeight: 800, marginBottom: '0.75rem' }}>もっている アイテム</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(70px, 1fr))', gap: '0.5rem' }}>
+            {unlockedItems.map(itemId => {
+              const item = GACHA_ITEMS.find(i => i.id === itemId);
+              if (!item) return null;
+              return (
+                <div key={itemId} style={{ 
+                  background: 'rgba(255,255,255,0.5)', 
+                  borderRadius: '12px', 
+                  padding: '0.5rem', 
+                  textAlign: 'center',
+                  border: `2px solid ${RARITY_COLORS[item.rarity]}`
+                }}>
+                  <div style={{ fontSize: '2rem' }}>{item.icon}</div>
+                  <div style={{ fontSize: '0.6rem', fontWeight: 700, marginTop: '0.25rem' }}>{item.name}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -816,6 +1034,14 @@ function App() {
     }
 
     if (correct) {
+      // Earn coins
+      const baseCoins = 5;
+      const streakBonus = Math.floor(currentStreak / 5);
+      const earnedCoins = baseCoins + streakBonus;
+      const newCoins = coins + earnedCoins;
+      setCoins(newCoins);
+      localStorage.setItem('coins', String(newCoins));
+
       // Add to collection
       setCaughtPokemon(prev => {
         if (!prev.includes(currentPokemon.id)) {
@@ -879,7 +1105,7 @@ function App() {
     
     setTotalQuestions(totalQuestions + 1);
     setShowResult(true);
-  }, [currentPokemon, score, bestScore, currentStreak, maxStreak, totalQuestions, playCry, displayMode]);
+  }, [currentPokemon, score, bestScore, currentStreak, maxStreak, totalQuestions, playCry, displayMode, coins]);
 
   const toKatakana = (str: string) => {
     return str.replace(/[ぁ-ん]/g, (s) => String.fromCharCode(s.charCodeAt(0) + 0x60));
@@ -953,6 +1179,7 @@ function App() {
             {activeTab === 'home' && renderHomeTab()}
             {activeTab === 'speed' && renderSpeedTab()}
             {activeTab === 'book' && renderBookTab()}
+            {activeTab === 'gacha' && renderGachaTab()}
             {activeTab === 'settings' && renderSettingsTab()}
           </div>
         </div>
@@ -970,6 +1197,10 @@ function App() {
             <span className="tab-icon">📖</span>
             <span>ずかん</span>
           </button>
+          <button className={`tab-item ${activeTab === 'gacha' ? 'active' : ''}`} onClick={() => setActiveTab('gacha')}>
+            <span className="tab-icon">🎰</span>
+            <span>ガチャ</span>
+          </button>
           <button className={`tab-item ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
             <span className="tab-icon">⚙️</span>
             <span>せってい</span>
@@ -978,7 +1209,39 @@ function App() {
 
         {showToast && (
           <div className="fade-in" style={{ position: 'fixed', bottom: 'calc(var(--tab-bar-height) + 1rem)', left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.8)', color: 'white', padding: '0.75rem 1.5rem', borderRadius: '30px', fontSize: '0.875rem', fontWeight: 600, zIndex: 200, pointerEvents: 'none' }}>
-            ✅ URLを コピーしたよ！
+            {coins < GACHA_COST ? '⚠️ コインが たりないよ！' : '✅ URLを コピーしたよ！'}
+          </div>
+        )}
+
+        {showGachaAnimation && gachaResult && (
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setShowGachaAnimation(false)}>
+            <div className="glass-panel bounce-in" style={{ width: '90%', maxWidth: '400px', padding: '2rem', textAlign: 'center', background: 'var(--bg-panel)' }} onClick={(e) => e.stopPropagation()}>
+              <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>{gachaResult.icon}</div>
+              <div style={{ 
+                fontSize: '0.875rem', 
+                fontWeight: 800, 
+                color: RARITY_COLORS[gachaResult.rarity as GachaRarity],
+                marginBottom: '0.5rem',
+                textTransform: 'uppercase'
+              }}>
+                {RARITY_LABELS[gachaResult.rarity as GachaRarity]}
+              </div>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>
+                {gachaResult.name}
+              </h2>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
+                {gachaResult.description}
+              </p>
+              {gachaResult.type === 'bonus' && (
+                <div style={{ background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', color: 'white', padding: '1rem', borderRadius: '12px', marginBottom: '1rem' }}>
+                  <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>ボーナス！</div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>+{gachaResult.value} コイン</div>
+                </div>
+              )}
+              <button onClick={() => setShowGachaAnimation(false)} className="btn-primary" style={{ width: '100%' }}>
+                とじる
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -1255,11 +1518,18 @@ function App() {
                  <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: isCorrect ? 'var(--success)' : 'var(--error)', marginBottom: '0.5rem' }}>
                    {isCorrect ? 'せいかい！' : 'ざんねん...'}
                  </h2>
+                 
+                 {isCorrect && (
+                   <div style={{ background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', color: 'white', padding: '0.75rem 1rem', borderRadius: '12px', marginBottom: '1rem', display: 'inline-block' }}>
+                     <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>🪙 +{5 + Math.floor(currentStreak / 5)} コイン</span>
+                   </div>
+                 )}
+
                  <div style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem' }}>
                    {currentPokemon.name}
                  </div>
                  
-                 <img src={currentPokemon.isShiny ? currentPokemon.shinyImage : currentPokemon.image} style={{ height: '150px', objectFit: 'contain' }} />
+                 <img src={currentPokemon.isShiny ? currentPokemon.shinyImage : currentPokemon.image} alt={currentPokemon.name} style={{ height: '150px', objectFit: 'contain' }} />
 
                  <div style={{ margin: '1.5rem 0', textAlign: 'left', background: 'rgba(255,255,255,0.5)', padding: '1rem', borderRadius: '12px' }}>
                     {quizCategory === 'type' && !isCorrect && (
