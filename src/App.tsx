@@ -117,11 +117,24 @@ const fetchPokemonData = async (id: number, forceShiny: boolean = false): Promis
   
   const isShiny = forceShiny || Math.random() < SHINY_RATE;
   
+  const imageUrl = data.sprites.other['official-artwork'].front_default;
+  const shinyImageUrl = data.sprites.other['official-artwork'].front_shiny;
+  
+  // Preload images for faster display
+  if (imageUrl) {
+    const img = new Image();
+    img.src = imageUrl;
+  }
+  if (shinyImageUrl) {
+    const img = new Image();
+    img.src = shinyImageUrl;
+  }
+  
   return {
     id,
     name: jaName,
-    image: data.sprites.other['official-artwork'].front_default,
-    shinyImage: data.sprites.other['official-artwork'].front_shiny,
+    image: imageUrl,
+    shinyImage: shinyImageUrl,
     isShiny,
     cry: data.cries?.latest || data.cries?.legacy,
     flavorText: jaFlavorText.replace(/\f/g, '').replace(/\n/g, ' '),
@@ -225,6 +238,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [inputValue, setInputValue] = useState('');
+  const [imageLoaded, setImageLoaded] = useState(false);
   
   // Hint and Collection state
   const [hintLevel, setHintLevel] = useState(0); // 0: none, 1: types, 2: first char
@@ -736,6 +750,7 @@ function App() {
     setShowResult(false);
     setInputValue('');
     setHintLevel(0);
+    setImageLoaded(false);
     
     let nextPokemon, nextChoices, nextCorrectAnswer;
 
@@ -1153,11 +1168,20 @@ function App() {
                     <span style={{ fontSize: '0.8rem', fontWeight: 700 }}>タップして きく</span>
                  </button>
              ) : (
-                 <img 
-                   src={currentPokemon.isShiny && showResult ? currentPokemon.shinyImage : currentPokemon.image} 
-                   alt="Pokemon" 
-                   className={`pokemon-image ${displayMode === 'silhouette' && !showResult ? 'pokemon-silhouette' : 'pokemon-reveal'} ${currentPokemon.isShiny && showResult ? 'shiny-glow' : ''}`}
-                 />
+                 <>
+                   {!imageLoaded && (
+                     <div style={{ width: '200px', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                       <div className="pulse" style={{ fontSize: '3rem' }}>⏳</div>
+                     </div>
+                   )}
+                   <img 
+                     src={currentPokemon.isShiny && showResult ? currentPokemon.shinyImage : currentPokemon.image} 
+                     alt="Pokemon" 
+                     className={`pokemon-image ${displayMode === 'silhouette' && !showResult ? 'pokemon-silhouette' : 'pokemon-reveal'} ${currentPokemon.isShiny && showResult ? 'shiny-glow' : ''}`}
+                     onLoad={() => setImageLoaded(true)}
+                     style={{ display: imageLoaded ? 'block' : 'none' }}
+                   />
+                 </>
              )}
 
              {/* Cry Button (Overlay) */}

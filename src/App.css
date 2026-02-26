@@ -80,6 +80,7 @@ body {
   position: relative;
   overflow: hidden;
   background: var(--bg-app);
+  touch-action: pan-y; /* Improve touch scrolling */
 }
 
 .app-container::before,
@@ -120,17 +121,21 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden; /* No global scroll */
-  padding: max(1rem, env(safe-area-inset-top)) 1rem calc(var(--tab-bar-height) + 1rem) 1rem;
+  padding: max(1rem, env(safe-area-inset-top)) 1rem 1rem 1rem;
+  padding-bottom: calc(var(--tab-bar-height) + 0.5rem); /* Space for tab bar */
   position: relative;
   z-index: 10;
+  min-height: 0; /* Important for flex children */
 }
 
 /* Scrollable area only for lists (like Pokedex) */
 .scroll-area {
   flex: 1;
   overflow-y: auto;
-  padding-bottom: 2rem;
+  overflow-x: hidden;
+  padding-bottom: 1rem;
   -webkit-overflow-scrolling: touch;
+  min-height: 0; /* Important for flex children */
 }
 .scroll-area::-webkit-scrollbar {
   width: 4px;
@@ -209,9 +214,13 @@ button:active {
 
 .pokemon-image {
   max-height: 35vh;
+  max-width: 90vw;
   width: auto;
+  height: auto;
   object-fit: contain;
   filter: drop-shadow(0 4px 10px rgba(0,0,0,0.1));
+  image-rendering: -webkit-optimize-contrast; /* Improve image quality */
+  image-rendering: crisp-edges;
 }
 
 .options-area {
@@ -258,10 +267,12 @@ input[type="text"]:focus {
 
 /* --- Tab Bar --- */
 .tab-bar {
-  position: absolute; /* Changed from fixed to absolute to stick to container */
+  position: fixed; /* Fixed to viewport for consistent positioning */
   bottom: 0;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px; /* Match container width */
   height: var(--tab-bar-height);
   background: var(--bg-glass);
   backdrop-filter: blur(20px);
@@ -270,7 +281,7 @@ input[type="text"]:focus {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
   z-index: 100;
   box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
 }
@@ -389,6 +400,11 @@ input[type="text"]:focus {
 }
 .pulse {
   animation: pulse 2s infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 @keyframes bounceIn {
