@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800;900&display=swap");
 
 :root {
   /* Default (Light) */
@@ -21,7 +21,7 @@
   --card-radius: 20px;
 }
 
-[data-theme='dark'] {
+[data-theme="dark"] {
   --primary-color: #60a5fa;
   --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   --text-primary: #f9fafb;
@@ -35,25 +35,25 @@
   --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
 }
 
-[data-theme='blue'] {
+[data-theme="blue"] {
   --primary-color: #2563eb;
   --bg-app: #eff6ff;
   --bg-panel: rgba(255, 255, 255, 0.8);
 }
 
-[data-theme='red'] {
+[data-theme="red"] {
   --primary-color: #dc2626;
   --primary-gradient: linear-gradient(135deg, #f87171, #dc2626);
   --bg-app: #fef2f2;
 }
 
-[data-theme='pink'] {
+[data-theme="pink"] {
   --primary-color: #db2777;
   --primary-gradient: linear-gradient(135deg, #f472b6, #db2777);
   --bg-app: #fdf2f8;
 }
 
-[data-theme='green'] {
+[data-theme="green"] {
   --primary-color: #059669;
   --primary-gradient: linear-gradient(135deg, #34d399, #059669);
   --bg-app: #ecfdf5;
@@ -67,7 +67,7 @@
 }
 
 body {
-  font-family: 'M PLUS Rounded 1c', sans-serif;
+  font-family: "M PLUS Rounded 1c", sans-serif;
   background: var(--bg-app);
   color: var(--text-primary);
   overscroll-behavior: none;
@@ -92,7 +92,7 @@ body {
 
 .app-container::before,
 .app-container::after {
-  content: '';
+  content: "";
   position: absolute;
   border-radius: 50%;
   filter: blur(100px);
@@ -105,7 +105,11 @@ body {
 .app-container::before {
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgba(102, 126, 234, 0.4) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(102, 126, 234, 0.4) 0%,
+    transparent 70%
+  );
   top: -15%;
   right: -15%;
 }
@@ -113,7 +117,11 @@ body {
 .app-container::after {
   width: 350px;
   height: 350px;
-  background: radial-gradient(circle, rgba(118, 75, 162, 0.3) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(118, 75, 162, 0.3) 0%,
+    transparent 70%
+  );
   bottom: -15%;
   left: -15%;
   animation-duration: 30s;
@@ -121,9 +129,15 @@ body {
 }
 
 @keyframes floatBlob {
-  0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-20px, 20px) scale(1.1); }
-  100% { transform: translate(20px, -20px) scale(0.9); }
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-20px, 20px) scale(1.1);
+  }
+  100% {
+    transform: translate(20px, -20px) scale(0.9);
+  }
 }
 
 .main-content {
@@ -189,7 +203,7 @@ button {
 }
 
 button::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -198,7 +212,9 @@ button::before {
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.3);
   transform: translate(-50%, -50%);
-  transition: width 0.6s, height 0.6s;
+  transition:
+    width 0.6s,
+    height 0.6s;
 }
 
 button:active::before {
@@ -246,7 +262,9 @@ button:active {
   box-shadow: none;
   background: transparent;
 }
-.btn-icon:active { transform: scale(0.9); }
+.btn-icon:active {
+  transform: scale(0.9);
+}
 
 /* --- Game UI Specifics --- */
 .pokemon-display-area {
@@ -259,12 +277,12 @@ button:active {
 }
 
 .pokemon-image {
-  max-height: 35vh;
-  max-width: 90vw;
+  max-height: 30vh;
+  max-width: 85vw;
   width: auto;
   height: auto;
   object-fit: contain;
-  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.1));
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.1));
   image-rendering: -webkit-optimize-contrast; /* Improve image quality */
   image-rendering: crisp-edges;
 }
@@ -280,9 +298,11 @@ button:active {
 .option-btn {
   background: var(--bg-panel);
   color: var(--text-primary);
-  font-size: 1.1rem;
-  padding: 1.2rem 0.5rem;
-  border: 1px solid var(--border-color);
+  font-size: 1rem;
+  padding: 1rem 0.4rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .input-area {
@@ -299,7 +319,7 @@ input[type="text"] {
   padding: 1rem;
   border-radius: 12px;
   border: 2px solid var(--border-color);
-  background: rgba(255,255,255,0.5);
+  background: rgba(255, 255, 255, 0.5);
   font-size: 1.2rem;
   text-align: center;
   font-weight: 700;
@@ -340,7 +360,7 @@ input[type="text"]:focus {
   justify-content: center;
   gap: 4px;
   color: var(--text-secondary);
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 700;
   height: 100%;
   border-radius: 0;
@@ -350,9 +370,9 @@ input[type="text"]:focus {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.tab-item:active { 
-  transform: scale(0.92); 
-  box-shadow: none; 
+.tab-item:active {
+  transform: scale(0.92);
+  box-shadow: none;
 }
 
 .tab-icon {
@@ -383,12 +403,13 @@ input[type="text"]:focus {
 }
 
 .header-title {
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 800;
   background: var(--primary-gradient);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.1rem;
 }
 
 /* --- Animations --- */
@@ -397,8 +418,14 @@ input[type="text"]:focus {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* --- Silhouette & Shine --- */
@@ -406,7 +433,7 @@ input[type="text"]:focus {
   filter: brightness(0) opacity(0.8);
   transition: all 0.5s ease;
 }
-[data-theme='dark'] .pokemon-silhouette {
+[data-theme="dark"] .pokemon-silhouette {
   filter: brightness(0) invert(1) opacity(0.6);
 }
 
@@ -416,8 +443,14 @@ input[type="text"]:focus {
 }
 
 @keyframes popIn {
-  0% { transform: scale(0.8); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* Shiny effect */
@@ -432,16 +465,14 @@ input[type="text"]:focus {
   .app-container {
     border-left: 1px solid var(--border-color);
     border-right: 1px solid var(--border-color);
-    box-shadow: 0 0 40px rgba(0,0,0,0.1);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
   }
 }
-
-
 
 /* --- Missing Animations & Utility Classes --- */
 .theme-circle {
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-  border: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   cursor: pointer;
 }
 .theme-circle:active {
@@ -449,34 +480,73 @@ input[type="text"]:focus {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.8; transform: scale(0.95); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(0.95);
+  }
 }
 .pulse {
   animation: pulse 2s infinite;
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes bounceIn {
-  0% { transform: scale(0.3); opacity: 0; }
-  50% { transform: scale(1.05); opacity: 0.8; }
-  70% { transform: scale(0.9); opacity: 0.9; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(0.9);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 .bounce-in {
-  animation: bounceIn 0.5s cubic-bezier(0.215, 0.610, 0.355, 1.000) both;
+  animation: bounceIn 0.5s cubic-bezier(0.215, 0.61, 0.355, 1) both;
 }
 
 @keyframes tada {
-  0% { transform: scale(1); }
-  10%, 20% { transform: scale(0.9) rotate(-3deg); }
-  30%, 50%, 70%, 90% { transform: scale(1.1) rotate(3deg); }
-  40%, 60%, 80% { transform: scale(1.1) rotate(-3deg); }
-  100% { transform: scale(1) rotate(0); }
+  0% {
+    transform: scale(1);
+  }
+  10%,
+  20% {
+    transform: scale(0.9) rotate(-3deg);
+  }
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: scale(1.1) rotate(3deg);
+  }
+  40%,
+  60%,
+  80% {
+    transform: scale(1.1) rotate(-3deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
 }
 
 .shiny-glow {
